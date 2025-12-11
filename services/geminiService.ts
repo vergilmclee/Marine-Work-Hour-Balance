@@ -140,24 +140,48 @@ export const generateBalanceReport = (
       const fullShifts = Math.floor(balance / HOURS_CONFIG.REGULAR_SHIFT_HOURS);
       const shiftRemainder = balance % HOURS_CONFIG.REGULAR_SHIFT_HOURS;
       
-      const leaveDays = Math.floor(balance / HOURS_CONFIG.LEAVE_HOURS);
-      const leaveRemainder = balance % HOURS_CONFIG.LEAVE_HOURS;
+      // Updated Leave Days Logic: Allow 0.5 increments (half days)
+      const halfLeaveHours = HOURS_CONFIG.LEAVE_HOURS / 2;
+      const leaveHalfSteps = Math.floor(balance / halfLeaveHours);
+      const leaveDays = leaveHalfSteps / 2; // e.g. 0.5, 1.0, 1.5
+      const leaveRemainder = balance - (leaveDays * HOURS_CONFIG.LEAVE_HOURS);
 
       suggestionSection = `
 ### 🍃 ${T.report_options}
 ${T.report_surplus_msg} **${balance.toFixed(2)}h**.
+`;
+      
+      let optCount = 1;
 
-**${language === 'zh-HK' ? '方案 1' : 'Option 1'}: ${T.opt_full_shifts}**
-- ${fullShifts > 0 ? `**${fullShifts} ${T.full_shift}**` : `0 ${T.full_shift}`}
+      // Option: Full Shifts
+      if (fullShifts > 0) {
+          const label = language === 'zh-HK' ? `方案 ${optCount}` : `Option ${optCount}`;
+          suggestionSection += `
+**${label}: ${T.opt_full_shifts}**
+- **${fullShifts} ${T.full_shift}**
 - ${T.remaining}: **${formatTime(shiftRemainder)}** (${shiftRemainder.toFixed(2)}h)
+`;
+          optCount++;
+      }
 
-**${language === 'zh-HK' ? '方案 2' : 'Option 2'}: ${T.opt_leave_days} (8.24h)**
-- ${leaveDays > 0 ? `**${leaveDays} ${T.leave_day}**` : `0 ${T.leave_day}`}
+      // Option: Leave Days
+      if (leaveDays > 0) {
+          const label = language === 'zh-HK' ? `方案 ${optCount}` : `Option ${optCount}`;
+          suggestionSection += `
+**${label}: ${T.opt_leave_days} (8.24h)**
+- **${leaveDays} ${T.leave_day}**
 - ${T.remaining}: **${formatTime(leaveRemainder)}** (${leaveRemainder.toFixed(2)}h)
+`;
+          optCount++;
+      }
 
-**${language === 'zh-HK' ? '方案 3' : 'Option 3'}: ${T.opt_exact}**
+      // Option: Exact Time Off (Always present)
+      const label = language === 'zh-HK' ? `方案 ${optCount}` : `Option ${optCount}`;
+      suggestionSection += `
+**${label}: ${T.opt_exact}**
 - ${T.take_exactly} **${formatTime(balance)}** ${T.off}.
 `;
+
   } else if (balance < -0.05) {
       const deficit = Math.abs(balance);
       const leaveNeeded = deficit / HOURS_CONFIG.LEAVE_HOURS;
