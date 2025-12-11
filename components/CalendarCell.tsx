@@ -26,14 +26,14 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick }) => 
 
   const getIcon = () => {
     switch (entry.type) {
-      case EntryType.REGULAR_SHIFT: return <Briefcase size={12} className="text-blue-100" />;
-      case EntryType.OFF_DAY: return <Sun size={12} className="opacity-40" />;
+      case EntryType.REGULAR_SHIFT: return <Briefcase size={10} className="text-blue-100" />;
+      case EntryType.OFF_DAY: return <Sun size={10} className="opacity-40" />;
       case EntryType.LEAVE_VL:
-      case EntryType.LEAVE_HOLIDAY: return <Calendar size={12} />;
-      case EntryType.COURSE_TRAINING: return <GraduationCap size={12} />;
-      case EntryType.TRANSFERRED_OUT: return <ArrowRightCircle size={12} />;
-      case EntryType.TIME_OFF: return <MinusCircle size={12} />;
-      case EntryType.CUSTOM: return <Clock size={12} />;
+      case EntryType.LEAVE_HOLIDAY: return <Calendar size={10} />;
+      case EntryType.COURSE_TRAINING: return <GraduationCap size={10} />;
+      case EntryType.TRANSFERRED_OUT: return <ArrowRightCircle size={10} />;
+      case EntryType.TIME_OFF: return <MinusCircle size={10} />;
+      case EntryType.CUSTOM: return <Clock size={10} />;
       default: return null;
     }
   };
@@ -60,22 +60,22 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick }) => 
     <button 
       onClick={onClick}
       className={`
-        aspect-square rounded-2xl border p-1.5 relative flex flex-col justify-between items-start transition-all duration-200 active:scale-95
+        rounded-xl border p-1 relative flex flex-col justify-between items-start transition-all duration-200 active:scale-95 h-full min-h-[56px]
         ${getBgColor()}
       `}
     >
       <div className="flex justify-between w-full items-start">
-        <span className={`text-xs font-bold leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-white' : isWeekend ? 'text-red-400' : 'text-slate-700'}`}>
+        <span className={`text-[10px] font-bold leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-white' : isWeekend ? 'text-red-400' : 'text-slate-700'}`}>
           {dayNum}
         </span>
         {hasNote && (
-          <div className={`w-1.5 h-1.5 rounded-full ${entry.type === EntryType.REGULAR_SHIFT ? 'bg-amber-400' : 'bg-amber-500'}`} />
+          <div className={`w-1 h-1 rounded-full ${entry.type === EntryType.REGULAR_SHIFT ? 'bg-amber-400' : 'bg-amber-500'}`} />
         )}
       </div>
 
-      <div className="flex flex-col items-start w-full gap-0.5">
-         <div className="mb-0.5">{getIcon()}</div>
-         <span className={`text-[8px] font-bold uppercase tracking-tight leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-blue-100' : 'opacity-70'}`}>
+      <div className="flex flex-col items-start w-full gap-0">
+         <div className="mb-0.5 opacity-80">{getIcon()}</div>
+         <span className={`text-[7px] font-bold uppercase tracking-tight leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-blue-100' : 'opacity-70'}`}>
             {getBadge()}
          </span>
       </div>

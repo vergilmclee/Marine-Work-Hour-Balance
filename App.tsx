@@ -419,7 +419,7 @@ const App: React.FC = () => {
   // Welcome / Setup Screen
   if (!startDate) {
       return (
-          <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+          <div className="h-[100dvh] flex items-center justify-center p-6 bg-slate-50 overflow-hidden">
               <div className="max-w-sm w-full bg-white p-8 rounded-3xl shadow-2xl border border-slate-100">
                   <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-6 mx-auto shadow-sm">
                       <PursuitCraft size={32} fill="currentColor" className="text-blue-500" />
@@ -472,183 +472,131 @@ const App: React.FC = () => {
   ];
 
   return (
-    <div className="pb-40 max-w-lg mx-auto bg-slate-50 min-h-screen shadow-2xl relative">
+    <div className="flex flex-col h-[100dvh] bg-slate-50 max-w-lg mx-auto shadow-2xl relative overflow-hidden">
       
-      {/* Top Header */}
-      <div className="bg-slate-900 text-white pt-safe px-4 pb-6 rounded-b-[2.5rem] shadow-xl relative overflow-hidden transition-all duration-300">
-         <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600 rounded-full blur-[100px] opacity-20 -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-         
-         <div className="relative z-10 flex justify-between items-center mb-6 pt-2">
-             <div>
-                <h1 className="font-black text-xl tracking-tight flex items-center gap-2">
-                    <PursuitCraft className="text-yellow-400 fill-yellow-400" size={20} />
-                    ShiftCycle
-                </h1>
+      {/* Top Header - Compact Version */}
+      <div className="bg-slate-900 text-white pt-safe px-4 pb-2 rounded-b-[2rem] shadow-xl relative z-20 shrink-0">
+         <div className="flex justify-between items-center mb-2">
+             <div className="flex items-center gap-2">
+                <PursuitCraft className="text-yellow-400 fill-yellow-400" size={16} />
+                <h1 className="font-black text-sm tracking-tight">ShiftCycle</h1>
              </div>
-             <button onClick={() => setShowSettings(!showSettings)} className="p-2.5 bg-white/10 rounded-full hover:bg-white/20 transition-all active:scale-95 backdrop-blur-md">
-                 <Settings size={20} />
+             
+             {/* Settings Toggle */}
+             <button onClick={() => setShowSettings(!showSettings)} className="p-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-all active:scale-95">
+                 <Settings size={14} />
              </button>
          </div>
 
-         {/* Settings Drawer */}
-         {showSettings && (
-             <div className="mb-6 bg-slate-800/80 backdrop-blur-xl rounded-2xl p-4 animate-in fade-in slide-in-from-top-4 border border-white/10 shadow-2xl">
-                 <h3 className="text-xs font-bold uppercase text-slate-400 mb-4 flex items-center gap-2"><UserCircle size={14}/> Settings</h3>
-                 <div className="space-y-4 mb-4">
-                     <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1.5">Staff Number</label>
-                        <input 
-                            type="text" 
-                            value={staffNumber} 
-                            onChange={(e) => setStaffNumber(e.target.value)} 
-                            className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:ring-1 focus:ring-blue-500 outline-none"
-                        />
-                     </div>
-                     <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1.5">Anchor Date</label>
-                        <input 
-                            type="date" 
-                            value={startDate} 
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:ring-1 focus:ring-blue-500 outline-none"
-                        />
-                        <p className="text-[10px] text-slate-500 mt-1">Changing this shifts all cycles.</p>
-                     </div>
-                 </div>
-                 
-                 <div className="grid grid-cols-2 gap-2 mb-4">
-                     <button onClick={handleBackup} className="py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs rounded-xl font-bold transition-colors flex items-center justify-center gap-2 border border-blue-500/20">
-                         <Download size={14} /> Backup Data
-                     </button>
-                     <label className="py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs rounded-xl font-bold transition-colors flex items-center justify-center gap-2 border border-blue-500/20 cursor-pointer">
-                         <Upload size={14} /> Restore Data
-                         <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
-                     </label>
-                 </div>
-
-                 <button onClick={handleResetApp} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs rounded-xl font-bold transition-colors flex items-center justify-center gap-2 border border-red-500/20">
-                     <RefreshCcw size={14} /> Reset Application Data
-                 </button>
-             </div>
-         )}
-
          {/* Cycle Nav */}
-         <div className="flex items-center justify-between bg-white/5 backdrop-blur-lg rounded-2xl p-1 mb-3 border border-white/10 shadow-lg">
-             <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-3 hover:bg-white/10 rounded-xl text-slate-300 transition-colors">
-                 <ChevronLeft size={20} />
+         <div className="flex items-center justify-between bg-white/5 backdrop-blur-lg rounded-xl p-1 border border-white/10">
+             <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-1.5 hover:bg-white/10 rounded-lg text-slate-300 transition-colors">
+                 <ChevronLeft size={16} />
              </button>
              <div className="text-center">
-                 <div className="text-sm font-bold text-white tracking-wide">
+                 <div className="text-xs font-bold text-white tracking-wide">
                      {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })}
                  </div>
              </div>
-             <button onClick={() => handleCycleChange(cycleIndex + 1)} className="p-3 hover:bg-white/10 rounded-xl text-slate-300 transition-colors">
-                 <ChevronRight size={20} />
+             <button onClick={() => handleCycleChange(cycleIndex + 1)} className="p-1.5 hover:bg-white/10 rounded-lg text-slate-300 transition-colors">
+                 <ChevronRight size={16} />
              </button>
          </div>
          
-         <div className="flex justify-center">
-             <button onClick={handleJumpToToday} className="text-[10px] bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 px-4 py-1.5 rounded-full flex items-center gap-1.5 transition-colors font-bold border border-blue-500/20">
-                 <CalendarClock size={12} /> Jump to Today
-             </button>
-         </div>
+         {/* Settings Drawer (Compact) */}
+         {showSettings && (
+             <div className="absolute top-full left-4 right-4 mt-2 bg-slate-800/95 backdrop-blur-xl rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 border border-white/10 shadow-2xl z-50">
+                 <div className="flex justify-between items-center mb-2">
+                     <h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2">Settings</h3>
+                     <button onClick={() => setShowSettings(false)}><X size={14} className="text-slate-400"/></button>
+                 </div>
+                 <div className="space-y-2 mb-3">
+                     <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Staff No.</label>
+                        <input type="text" value={staffNumber} onChange={(e) => setStaffNumber(e.target.value)} className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white outline-none"/>
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Anchor Date</label>
+                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white outline-none"/>
+                     </div>
+                 </div>
+                 <div className="grid grid-cols-2 gap-2 mb-2">
+                     <button onClick={handleBackup} className="py-2 bg-blue-500/10 text-blue-300 text-[10px] rounded-lg font-bold border border-blue-500/20">Backup</button>
+                     <label className="py-2 bg-blue-500/10 text-blue-300 text-[10px] rounded-lg font-bold border border-blue-500/20 text-center cursor-pointer">
+                         Restore <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
+                     </label>
+                 </div>
+                 <button onClick={handleResetApp} className="w-full py-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg font-bold border border-red-500/20">Reset App</button>
+             </div>
+         )}
       </div>
 
-      {/* Main Content */}
-      <div className="px-4 mt-4 relative z-20 space-y-4">
+      {/* Flexible Content Area - Contains Tools, Balance & Calendar */}
+      <div className="flex-1 flex flex-col px-4 pt-3 gap-2 overflow-hidden relative z-10">
         
-        {/* Previous Balance Card */}
-        <div className={`p-4 rounded-2xl border shadow-lg flex items-center justify-between transition-colors ${previousBalance < 0 ? 'bg-white border-red-100' : 'bg-white border-slate-100'}`}>
-            <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl ${previousBalance < 0 ? 'bg-red-50 text-red-500' : 'bg-slate-50 text-slate-500'}`}>
-                    <History size={20} />
-                </div>
-                <div>
-                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Carried Over</div>
-                    <div className="text-xs font-medium text-slate-600">
-                        {isLinkedBalance ? 'Auto-linked' : 'Manual Edit'}
-                    </div>
+        {/* Top Controls Row: Balance + Tools */}
+        <div className="flex gap-2 items-stretch shrink-0 h-10">
+            {/* Previous Balance (Compact) */}
+            <div className={`flex-1 flex items-center justify-between px-3 rounded-xl border bg-white shadow-sm ${previousBalance < 0 ? 'border-red-100' : 'border-slate-100'}`}>
+                <div className="text-[10px] font-bold text-slate-400 uppercase mr-2 truncate">Carried Over</div>
+                <div className="flex items-center gap-2">
+                     <div className="relative">
+                        <input 
+                            type="number" 
+                            step="0.01"
+                            value={previousBalance}
+                            onChange={(e) => {
+                                setPreviousBalance(parseFloat(e.target.value) || 0);
+                                setIsLinkedBalance(false);
+                            }}
+                            className={`text-right w-16 font-black text-sm bg-transparent border-b border-transparent focus:border-blue-500 outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
+                        />
+                     </div>
+                     {!isLinkedBalance && (
+                        <button 
+                            onClick={() => {
+                                const { balance, isLinked } = getEffectivePreviousBalance(cycleIndex);
+                                setPreviousBalance(balance);
+                                setIsLinkedBalance(isLinked);
+                            }}
+                            className="text-slate-400 hover:text-blue-600"
+                        >
+                            <RefreshCcw size={12} />
+                        </button>
+                     )}
                 </div>
             </div>
-            <div className="flex items-center gap-3">
-                <div className="relative flex items-center">
-                    <input 
-                        type="number" 
-                        step="0.01"
-                        value={previousBalance}
-                        onChange={(e) => {
-                            setPreviousBalance(parseFloat(e.target.value) || 0);
-                            setIsLinkedBalance(false);
-                        }}
-                        className={`text-right w-32 pr-6 font-black text-xl bg-transparent border-b-2 border-transparent focus:border-blue-500 outline-none transition-all ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
-                    />
-                    <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-300 pointer-events-none mt-0.5">h</span>
-                </div>
-                
-                {!isLinkedBalance && (
-                    <button 
-                        onClick={() => {
-                            const { balance, isLinked } = getEffectivePreviousBalance(cycleIndex);
-                            setPreviousBalance(balance);
-                            setIsLinkedBalance(isLinked);
-                        }}
-                        className="p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                        title="Re-link to previous cycle history"
-                    >
-                        <RefreshCcw size={14} />
-                    </button>
-                )}
+
+            {/* Quick Actions */}
+            <div className="flex gap-1">
+                 <button onClick={handleJumpToToday} className="px-3 bg-white border border-slate-100 rounded-xl text-slate-500 hover:text-blue-600 hover:border-blue-100 transition-colors shadow-sm">
+                     <CalendarClock size={16} />
+                 </button>
+                 <button onClick={() => setIsWizardOpen(true)} className="px-3 bg-purple-50 border border-purple-100 rounded-xl text-purple-600 hover:bg-purple-100 transition-colors shadow-sm">
+                     <Wand2 size={16} />
+                 </button>
+                 <button 
+                    onClick={() => setIsPaintMode(!isPaintMode)}
+                    className={`px-3 rounded-xl border transition-colors shadow-sm ${isPaintMode ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-500 hover:text-blue-600'}`}
+                >
+                    {isPaintMode ? <Check size={16} /> : <PaintBucket size={16} />}
+                </button>
             </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 relative overflow-hidden">
+        {/* Calendar Container */}
+        <div className="flex-1 bg-white rounded-2xl p-2 shadow-sm border border-slate-100 relative overflow-hidden flex flex-col min-h-0">
+            {/* Paint Palette - Overlay or Inline */}
             {isPaintMode && (
-                <div className="absolute top-0 left-0 right-0 bg-blue-600 text-white text-[10px] font-bold py-1 text-center z-10 animate-in fade-in slide-in-from-top-1">
-                    QUICK ASSIGN MODE ACTIVE
-                </div>
-            )}
-            <div className="flex justify-between items-center mb-5 mt-2">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
-                    <CalendarIcon size={18} className="text-blue-600" />
-                    Days
-                </h2>
-                <div className="flex gap-2">
-                    <button 
-                        onClick={() => setIsPaintMode(!isPaintMode)}
-                        className={`
-                            text-[10px] font-bold px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5 border
-                            ${isPaintMode 
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' 
-                                : 'text-slate-500 bg-slate-50 border-slate-200 hover:bg-slate-100'
-                            }
-                        `}
-                    >
-                        {isPaintMode ? <Check size={12} /> : <PaintBucket size={12} />}
-                        {isPaintMode ? 'Done' : 'Quick Assign'}
-                    </button>
-                    {!isPaintMode && (
-                         <button 
-                            onClick={() => setIsWizardOpen(true)}
-                            className="text-[10px] font-bold text-purple-600 bg-purple-50 px-3 py-2 rounded-xl hover:bg-purple-100 transition-colors flex items-center gap-1.5 border border-purple-100"
-                        >
-                            <Wand2 size={12} /> Wizard
-                        </button>
-                    )}
-                </div>
-            </div>
-            
-            {/* Paint Palette */}
-            {isPaintMode && (
-                <div className="mb-4 bg-slate-50 p-2 rounded-xl flex gap-2 overflow-x-auto pb-2 border border-slate-100">
+                <div className="mb-2 bg-slate-50 p-1.5 rounded-lg flex gap-1 overflow-x-auto border border-slate-100 shrink-0 no-scrollbar">
                     {PAINT_OPTIONS.map(opt => (
                         <button
                             key={opt.type}
                             onClick={() => setPaintType(opt.type)}
                             className={`
-                                flex-shrink-0 px-3 py-2 rounded-lg text-xs font-bold border transition-all
+                                flex-shrink-0 px-2 py-1.5 rounded-md text-[10px] font-bold border transition-all
                                 ${paintType === opt.type 
-                                    ? `${opt.color} ring-2 ring-offset-1 ring-blue-300` 
+                                    ? `${opt.color} ring-1 ring-offset-1 ring-blue-300` 
                                     : 'bg-white border-slate-200 text-slate-500 opacity-60'
                                 }
                             `}
@@ -659,13 +607,15 @@ const App: React.FC = () => {
                 </div>
             )}
             
-            <div className="grid grid-cols-6 gap-2 mb-2">
+            {/* Days Header */}
+            <div className="grid grid-cols-6 gap-1 mb-1 shrink-0">
                 {['M','T','W','T','F','S'].map(d => (
-                    <div key={d} className="text-center text-[10px] font-bold text-slate-300 uppercase">{d}</div>
+                    <div key={d} className="text-center text-[9px] font-bold text-slate-300 uppercase">{d}</div>
                 ))}
             </div>
             
-            <div className="grid grid-cols-6 gap-2">
+            {/* Grid - Flex Grow to fill space */}
+            <div className="grid grid-cols-6 gap-1.5 flex-1 min-h-0 content-start overflow-y-auto no-scrollbar pb-1">
                 {days.map(day => (
                     <CalendarCell 
                         key={day.dayId} 
@@ -676,31 +626,47 @@ const App: React.FC = () => {
                 ))}
             </div>
         </div>
-
-        {/* Report Area */}
-        {report && (
-            <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-indigo-600">
-                        <PursuitCraft size={20} fill="currentColor" className="text-indigo-100" />
-                        <h2 className="font-bold text-lg">Report</h2>
-                    </div>
-                    <button onClick={() => setReport(null)} className="text-slate-400 hover:text-slate-600"><X size={18}/></button>
-                </div>
-                <div className="prose prose-sm prose-slate max-w-none bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <ReactMarkdown>{report}</ReactMarkdown>
-                </div>
-                <button 
-                    onClick={() => navigator.clipboard.writeText(report)} 
-                    className="mt-4 w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
-                >
-                    <Save size={14} /> Copy to Clipboard
-                </button>
-            </div>
-        )}
-
-        <div className="h-24" /> {/* Spacer for fixed bottom panel */}
+        
+        {/* Spacer for Stats Panel */}
+        <div className="h-[140px] shrink-0" />
       </div>
+
+      {/* Report Modal - Absolute Overlay */}
+      {report && (
+            <div className="absolute inset-x-4 bottom-[140px] top-20 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 z-40 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-10">
+                <div className="flex items-center justify-between p-3 border-b border-slate-100 bg-white">
+                    <div className="flex items-center gap-2 text-indigo-600">
+                        <PursuitCraft size={16} fill="currentColor" className="text-indigo-100" />
+                        <h2 className="font-bold text-sm">Generated Report</h2>
+                    </div>
+                    <button onClick={() => setReport(null)} className="p-1 rounded-full hover:bg-slate-100"><X size={16} className="text-slate-400"/></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                    <div className="prose prose-sm prose-slate max-w-none">
+                        <ReactMarkdown>{report}</ReactMarkdown>
+                    </div>
+                </div>
+                <div className="p-3 bg-slate-50 border-t border-slate-100">
+                    <button 
+                        onClick={() => navigator.clipboard.writeText(report)} 
+                        className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Save size={14} /> Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+      )}
+
+      {/* Stats Panel - Fixed Bottom */}
+      <StatsPanel 
+        totalWorked={cycleStats.totalWorked}
+        balance={cycleStats.netBalance}
+        adjustedTarget={cycleStats.adjustedTarget}
+        trainingDays={cycleStats.trainingDays}
+        previousBalance={previousBalance}
+        onGenerate={handleGenerateReport}
+        isLoading={loading}
+      />
 
       {/* Selected Day Modal (Popup) */}
       {selectedDay && (
@@ -722,7 +688,7 @@ const App: React.FC = () => {
           </div>
       )}
 
-      {/* Other Modals - Conditionally rendered to force reset on close */}
+      {/* Wizard */}
       {isWizardOpen && (
         <SituationWizard 
            isOpen={isWizardOpen}
@@ -733,17 +699,6 @@ const App: React.FC = () => {
            onApplyRange={handleSituationApplyRange}
         />
       )}
-
-      <StatsPanel 
-        totalWorked={cycleStats.totalWorked}
-        balance={cycleStats.netBalance}
-        adjustedTarget={cycleStats.adjustedTarget}
-        trainingDays={cycleStats.trainingDays}
-        previousBalance={previousBalance}
-        onGenerate={handleGenerateReport}
-        isLoading={loading}
-      />
-
     </div>
   );
 };
