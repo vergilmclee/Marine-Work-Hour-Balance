@@ -90,12 +90,62 @@ export const generateBalanceReport = (
           break;
       case 'E': // Regular
       default:
-          const status = balance >= 0 ? "surplus" : "deficit";
-          statement = `Work hours report for cycle ${cycleStartStr} to ${cycleEndStr}: Staff ${staffNoDisplay} has a net ${status} of ${Math.abs(balance).toFixed(2)} hours.`;
+          if (balance >= 0) {
+             statement = `Staff ${staffNoDisplay} has accumulated a net surplus of ${balance.toFixed(2)} hours for the cycle ${cycleStartStr} to ${cycleEndStr}. This surplus is available for Time Off in Lieu (OIL).`;
+          } else {
+             statement = `Staff ${staffNoDisplay} has a net deficit of ${Math.abs(balance).toFixed(2)} hours for the cycle ${cycleStartStr} to ${cycleEndStr}, requiring adjustment via Leave or additional duties.`;
+          }
           break;
   }
 
-  // 4. Build Log
+  // 4. Calculate Suggestions
+  let suggestionSection = '';
+  if (balance > 0.05) {
+      const fullShifts = Math.floor(balance / HOURS_CONFIG.REGULAR_SHIFT_HOURS);
+      const shiftRemainder = balance % HOURS_CONFIG.REGULAR_SHIFT_HOURS;
+      
+      const leaveDays = Math.floor(balance / HOURS_CONFIG.LEAVE_HOURS);
+      const leaveRemainder = balance % HOURS_CONFIG.LEAVE_HOURS;
+
+      // Calculate time string for remainder
+      const formatTime = (hours: number) => {
+          const h = Math.floor(hours);
+          const m = Math.round((hours - h) * 60);
+          return `${h}h ${m}m`;
+      };
+
+      suggestionSection = `
+### 🍃 Suggested OIL Options
+You have a surplus of **${balance.toFixed(2)} hours**.
+
+**Option 1: Clear with Full Shifts**
+- ${fullShifts > 0 ? `**${fullShifts} Full Shift(s)**` : '0 Full Shifts'}
+- Remaining: **${formatTime(shiftRemainder)}** (${shiftRemainder.toFixed(2)}h)
+
+**Option 2: Clear with Leave Days (8.24h)**
+- ${leaveDays > 0 ? `**${leaveDays} Leave Day(s)**` : '0 Leave Days'}
+- Remaining: **${formatTime(leaveRemainder)}** (${leaveRemainder.toFixed(2)}h)
+
+**Option 3: Exact Time Off**
+- Take exactly **${formatTime(balance)}** off.
+`;
+  } else if (balance < -0.05) {
+      const deficit = Math.abs(balance);
+      const leaveNeeded = deficit / HOURS_CONFIG.LEAVE_HOURS;
+      const shiftsNeeded = deficit / HOURS_CONFIG.REGULAR_SHIFT_HOURS;
+      
+      suggestionSection = `
+### ⚠️ Deficit Resolution
+You are short **${deficit.toFixed(2)} hours**.
+
+**Recovery Options:**
+- Apply for **${leaveNeeded.toFixed(1)} Leave Days** (V/L).
+- Work **${shiftsNeeded.toFixed(1)} extra shifts**.
+- Arrange a repayment shift or mutual exchange.
+`;
+  }
+
+  // 5. Build Log
   const irregularityNotes = entries
     .filter(e => e.type !== EntryType.REGULAR_SHIFT && e.type !== EntryType.OFF_DAY)
     .map(e => {
@@ -115,7 +165,7 @@ export const generateBalanceReport = (
     })
     .join('\n');
 
-  // 5. Final Markdown
+  // 6. Final Markdown
   const report = `
 ### Balance Report
 **Cycle:** ${cycleStartStr} — ${cycleEndStr}
@@ -125,6 +175,8 @@ export const generateBalanceReport = (
 - Target: ${adjustedTarget.toFixed(2)}h
 - Worked: ${totalWorked.toFixed(2)}h
 - Balance: ${balance.toFixed(2)}h
+
+${suggestionSection}
 
 ---
 ### Formal Statement

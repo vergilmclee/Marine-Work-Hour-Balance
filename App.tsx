@@ -11,7 +11,7 @@ import { calculateCycleStats } from './utils/balanceUtils';
 import { Info, AlertCircle, Wand2, RefreshCcw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, History, CalendarClock, Search, UserCircle, Lock, Menu, Settings, X, Save, PaintBucket, Check, Eraser, Download, Upload } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-// Custom Icon for High Speed Pursuit Craft (Port Side / Facing Left)
+// Custom Icon for High Speed Pursuit Craft (Port Side / Facing Left) - Updated to Sleek Yacht Profile
 const PursuitCraft = ({ size = 24, className = "", fill = "none", ...props }: React.SVGProps<SVGSVGElement> & { size?: number | string, fill?: string }) => {
   return (
     <svg 
@@ -21,20 +21,29 @@ const PursuitCraft = ({ size = 24, className = "", fill = "none", ...props }: Re
       viewBox="0 0 24 24" 
       fill="none" 
       stroke="currentColor" 
-      strokeWidth="2" 
+      strokeWidth="1.5" 
       strokeLinecap="round" 
       strokeLinejoin="round" 
       className={className}
       {...props}
     >
-      {/* Hull facing left (Port side view) */}
-      <path d="M22 17H10c-5 0-8-3-8-3l1-4h19v7Z" fill={fill !== 'none' ? fill : 'none'} />
-      {/* Cabin */}
-      <path d="M10 10l2-3h5v3" />
-      {/* Mast/Radar */}
-      <path d="M15 4v3" />
-      {/* Speed lines/Water */}
-      <path d="M2 20h20" strokeDasharray="2 4" />
+      {/* Hull */}
+      <path d="M2 14c0 0 4.5-1.5 10.5-1.5h10v3H10.5C6 15.5 3 15 2 14z" fill={fill !== 'none' ? fill : 'none'} />
+      
+      {/* Cabin Superstructure */}
+      <path d="M9.5 12.5l2.5-4h7l2 4" />
+      {/* Window Split */}
+      <path d="M13.5 8.5v4" />
+      
+      {/* Radar Arch / Mast */}
+      <path d="M16 8.5l1.5-3.5h2" />
+      <path d="M18.5 5l0.5-2" />
+      
+      {/* Bow Rail */}
+      <path d="M3 12.5l3-1h3" />
+      
+      {/* Water Line */}
+      <path d="M4 17h16" strokeDasharray="2 3" className="opacity-50" />
     </svg>
   );
 };
@@ -188,6 +197,16 @@ const App: React.FC = () => {
 
   // --- Cycle Navigation Handlers ---
   const handleCycleChange = (newIndex: number) => {
+    // CRITICAL FIX: Explicitly save the CURRENT cycle before switching.
+    // This prevents the "stale data" issue where calculating the previous balance for the NEW cycle
+    // would read empty/unsaved data from the OLD cycle storage.
+    if (cycleIndex !== newIndex && isInitialized) {
+        saveCycleData(cycleIndex, days, previousBalance);
+        // Update refs so the useEffect doesn't try to double-save unnecessarily, though harmless.
+        lastLoadedDaysRef.current = JSON.stringify(days);
+        lastLoadedBalanceRef.current = previousBalance;
+    }
+
     setCycleIndex(newIndex);
     
     const data = loadCycleData(newIndex);
@@ -296,7 +315,8 @@ const App: React.FC = () => {
 
         if (!updatesByCycle[cIndex]) {
             if (cIndex === cycleIndex) {
-                updatesByCycle[cIndex] = [...days];
+                // IMPORTANT: Use current state for current cycle to capture any unsaved changes
+                updatesByCycle[cIndex] = [...days]; 
             } else {
                 updatesByCycle[cIndex] = loadCycleData(cIndex).days;
             }
@@ -321,14 +341,51 @@ const App: React.FC = () => {
         current.setDate(current.getDate() + 1);
     }
 
-    // Save all affected cycles
-    Object.keys(updatesByCycle).forEach(key => {
-        const idx = parseInt(key);
-        if (idx === cycleIndex) {
-            setDays(updatesByCycle[idx]);
+    // Apply updates with balance chaining to ensure mathematical continuity across cycles
+    const sortedIndices = Object.keys(updatesByCycle).map(Number).sort((a, b) => a - b);
+    let runningBalance: number | null = null;
+
+    sortedIndices.forEach((idx, i) => {
+        const cycleDays = updatesByCycle[idx];
+        let startBal = 0;
+
+        // 1. Determine Start Balance
+        if (i === 0) {
+            // First cycle in range: Use its existing start balance
+            if (idx === cycleIndex) {
+                startBal = previousBalance;
+            } else {
+                startBal = loadCycleData(idx).previousBalance;
+            }
         } else {
-            const existing = loadCycleData(idx);
-            saveCycleData(idx, updatesByCycle[idx], existing.previousBalance);
+            // Subsequent cycles: Check for continuity
+            // If this cycle immediately follows the previous one in the sorted list
+            if (runningBalance !== null && idx === sortedIndices[i-1] + 1) {
+                startBal = runningBalance;
+            } else {
+                // Not continuous (gap in range selection?), fallback to stored
+                if (idx === cycleIndex) {
+                    startBal = previousBalance;
+                } else {
+                    startBal = loadCycleData(idx).previousBalance;
+                }
+            }
+        }
+
+        // 2. Calculate End Balance (to carry forward)
+        const stats = calculateCycleStats(cycleDays, startBal);
+        runningBalance = stats.netBalance;
+
+        // 3. Save State
+        if (idx === cycleIndex) {
+            setDays(cycleDays);
+            // If we just calculated a new start balance for the current view from a previous cycle in this batch
+            if (i > 0 && idx === sortedIndices[i-1] + 1) {
+                setPreviousBalance(startBal);
+                setIsLinkedBalance(true);
+            }
+        } else {
+            saveCycleData(idx, cycleDays, startBal);
         }
     });
   };
@@ -474,32 +531,32 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col h-[100dvh] bg-slate-50 max-w-lg mx-auto shadow-2xl relative overflow-hidden">
       
-      {/* Top Header - Compact Version */}
-      <div className="bg-slate-900 text-white pt-safe px-4 pb-2 rounded-b-[2rem] shadow-xl relative z-20 shrink-0">
-         <div className="flex justify-between items-center mb-2">
-             <div className="flex items-center gap-2">
-                <PursuitCraft className="text-yellow-400 fill-yellow-400" size={16} />
-                <h1 className="font-black text-sm tracking-tight">ShiftCycle</h1>
+      {/* Top Header - Compact Version (Expanded as requested) */}
+      <div className="bg-slate-900 text-white pt-safe px-6 pb-6 rounded-b-[2.5rem] shadow-xl relative z-20 shrink-0 transition-all duration-300 ease-out">
+         <div className="flex justify-between items-center mb-4 mt-1">
+             <div className="flex items-center gap-3">
+                <PursuitCraft className="text-yellow-400 fill-yellow-400" size={22} />
+                <h1 className="font-black text-xl tracking-tight">ShiftCycle</h1>
              </div>
              
              {/* Settings Toggle */}
-             <button onClick={() => setShowSettings(!showSettings)} className="p-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-all active:scale-95">
-                 <Settings size={14} />
+             <button onClick={() => setShowSettings(!showSettings)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all active:scale-95">
+                 <Settings size={18} />
              </button>
          </div>
 
          {/* Cycle Nav */}
-         <div className="flex items-center justify-between bg-white/5 backdrop-blur-lg rounded-xl p-1 border border-white/10">
-             <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-1.5 hover:bg-white/10 rounded-lg text-slate-300 transition-colors">
-                 <ChevronLeft size={16} />
+         <div className="flex items-center justify-between bg-white/10 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-inner">
+             <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-2 hover:bg-white/10 rounded-xl text-slate-200 transition-colors">
+                 <ChevronLeft size={20} />
              </button>
-             <div className="text-center">
-                 <div className="text-xs font-bold text-white tracking-wide">
+             <div className="text-center px-2">
+                 <div className="text-sm font-bold text-white tracking-wide">
                      {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })}
                  </div>
              </div>
-             <button onClick={() => handleCycleChange(cycleIndex + 1)} className="p-1.5 hover:bg-white/10 rounded-lg text-slate-300 transition-colors">
-                 <ChevronRight size={16} />
+             <button onClick={() => handleCycleChange(cycleIndex + 1)} className="p-2 hover:bg-white/10 rounded-xl text-slate-200 transition-colors">
+                 <ChevronRight size={20} />
              </button>
          </div>
          
@@ -532,55 +589,61 @@ const App: React.FC = () => {
       </div>
 
       {/* Flexible Content Area - Contains Tools, Balance & Calendar */}
-      <div className="flex-1 flex flex-col px-4 pt-3 gap-2 overflow-hidden relative z-10">
+      <div className="flex-1 flex flex-col px-4 pt-4 gap-2 overflow-hidden relative z-10">
         
-        {/* Top Controls Row: Balance + Tools */}
-        <div className="flex gap-2 items-stretch shrink-0 h-10">
-            {/* Previous Balance (Compact) */}
-            <div className={`flex-1 flex items-center justify-between px-3 rounded-xl border bg-white shadow-sm ${previousBalance < 0 ? 'border-red-100' : 'border-slate-100'}`}>
-                <div className="text-[10px] font-bold text-slate-400 uppercase mr-2 truncate">Carried Over</div>
-                <div className="flex items-center gap-2">
-                     <div className="relative">
-                        <input 
-                            type="number" 
-                            step="0.01"
-                            value={previousBalance}
-                            onChange={(e) => {
-                                setPreviousBalance(parseFloat(e.target.value) || 0);
-                                setIsLinkedBalance(false);
-                            }}
-                            className={`text-right w-16 font-black text-sm bg-transparent border-b border-transparent focus:border-blue-500 outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
-                        />
-                     </div>
-                     {!isLinkedBalance && (
+        {/* Top Controls Row: Unified Bar (Merged Actions into Previous Balance) */}
+        <div className="mb-2">
+            <div className={`flex items-center justify-between p-1 pl-3 rounded-2xl bg-white shadow-sm border ${previousBalance < 0 ? 'border-red-100' : 'border-slate-200'}`}>
+                
+                {/* Left: Previous Balance Input */}
+                <div className="flex-1 flex items-center gap-3">
+                    <div className="text-[9px] font-bold text-slate-400 uppercase leading-tight">Carried<br/>Over</div>
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <input 
+                                type="number" 
+                                step="0.01"
+                                value={previousBalance}
+                                onChange={(e) => {
+                                    setPreviousBalance(parseFloat(e.target.value) || 0);
+                                    setIsLinkedBalance(false);
+                                }}
+                                className={`text-right w-28 font-black text-lg bg-transparent border-none outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
+                            />
+                        </div>
                         <button 
                             onClick={() => {
                                 const { balance, isLinked } = getEffectivePreviousBalance(cycleIndex);
                                 setPreviousBalance(balance);
                                 setIsLinkedBalance(isLinked);
                             }}
-                            className="text-slate-400 hover:text-blue-600"
+                            className={`p-1.5 rounded-full transition-colors ${isLinkedBalance ? 'text-blue-200 hover:text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'}`}
+                            title="Recalculate / Sync Balance"
                         >
-                            <RefreshCcw size={12} />
+                            <RefreshCcw size={14} />
                         </button>
-                     )}
+                    </div>
                 </div>
-            </div>
 
-            {/* Quick Actions */}
-            <div className="flex gap-1">
-                 <button onClick={handleJumpToToday} className="px-3 bg-white border border-slate-100 rounded-xl text-slate-500 hover:text-blue-600 hover:border-blue-100 transition-colors shadow-sm">
-                     <CalendarClock size={16} />
-                 </button>
-                 <button onClick={() => setIsWizardOpen(true)} className="px-3 bg-purple-50 border border-purple-100 rounded-xl text-purple-600 hover:bg-purple-100 transition-colors shadow-sm">
-                     <Wand2 size={16} />
-                 </button>
-                 <button 
-                    onClick={() => setIsPaintMode(!isPaintMode)}
-                    className={`px-3 rounded-xl border transition-colors shadow-sm ${isPaintMode ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-100 text-slate-500 hover:text-blue-600'}`}
-                >
-                    {isPaintMode ? <Check size={16} /> : <PaintBucket size={16} />}
-                </button>
+                {/* Divider */}
+                <div className="w-px h-8 bg-slate-100 mx-1"></div>
+
+                {/* Right: Tools */}
+                <div className="flex items-center gap-0.5 px-1">
+                     <button onClick={handleJumpToToday} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors" title="Jump to Today">
+                         <CalendarClock size={18} strokeWidth={2} />
+                     </button>
+                     <button onClick={() => setIsWizardOpen(true)} className="p-2 text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors" title="Situation Wizard">
+                         <Wand2 size={18} strokeWidth={2} />
+                     </button>
+                     <button 
+                        onClick={() => setIsPaintMode(!isPaintMode)}
+                        className={`p-2 rounded-xl transition-colors ${isPaintMode ? 'bg-blue-100 text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                        title="Quick Paint Mode"
+                    >
+                        {isPaintMode ? <Check size={18} strokeWidth={2} /> : <PaintBucket size={18} strokeWidth={2} />}
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -628,12 +691,12 @@ const App: React.FC = () => {
         </div>
         
         {/* Spacer for Stats Panel */}
-        <div className="h-[140px] shrink-0" />
+        <div className="h-[200px] shrink-0" />
       </div>
 
       {/* Report Modal - Absolute Overlay */}
       {report && (
-            <div className="absolute inset-x-4 bottom-[140px] top-20 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 z-40 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-10">
+            <div className="absolute inset-x-4 bottom-[220px] top-20 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 z-40 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-10">
                 <div className="flex items-center justify-between p-3 border-b border-slate-100 bg-white">
                     <div className="flex items-center gap-2 text-indigo-600">
                         <PursuitCraft size={16} fill="currentColor" className="text-indigo-100" />
