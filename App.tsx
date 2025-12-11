@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { DayEntry, EntryType, HOURS_CONFIG, Language } from './types';
 import CalendarCell from './components/CalendarCell';
@@ -598,9 +599,9 @@ const AppContent: React.FC = () => {
         {/* Top Controls Row */}
         <div className="mb-2 space-y-2">
             {/* Balance Card */}
-            <div className={`flex items-center justify-between p-4 rounded-2xl bg-white shadow-sm border ${previousBalance < 0 ? 'border-red-100' : 'border-slate-200'}`}>
+            <div className={`flex items-center justify-between px-4 py-2 rounded-2xl bg-white shadow-sm border ${previousBalance < 0 ? 'border-red-100' : 'border-slate-200'}`}>
                 <div className="text-[10px] font-bold text-slate-400 uppercase leading-tight whitespace-pre-line">{t('carried_over')}</div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                     <input 
                         type="number" 
                         step="0.01"
@@ -609,7 +610,7 @@ const AppContent: React.FC = () => {
                             setPreviousBalance(parseFloat(e.target.value) || 0);
                             setIsLinkedBalance(false);
                         }}
-                        className={`text-right w-32 font-black text-3xl bg-transparent border-none outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
+                        className={`text-right w-28 font-black text-2xl bg-transparent border-none outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
                     />
                     <button 
                         onClick={() => {
@@ -617,10 +618,10 @@ const AppContent: React.FC = () => {
                             setPreviousBalance(balance);
                             setIsLinkedBalance(isLinked);
                         }}
-                        className={`p-2 rounded-full transition-colors ${isLinkedBalance ? 'text-blue-200 hover:text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'}`}
+                        className={`p-1.5 rounded-full transition-colors ${isLinkedBalance ? 'text-blue-200 hover:text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'}`}
                         title="Recalculate / Sync Balance"
                     >
-                        <RefreshCcw size={16} />
+                        <RefreshCcw size={14} />
                     </button>
                 </div>
             </div>
@@ -629,27 +630,27 @@ const AppContent: React.FC = () => {
             <div className="grid grid-cols-3 gap-2">
                  <button 
                     onClick={handleJumpToToday} 
-                    className="py-2 bg-white border border-slate-200 rounded-xl text-slate-500 font-bold hover:bg-slate-50 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-1 shadow-sm min-h-[60px]"
+                    className="py-1.5 bg-white border border-slate-200 rounded-xl text-slate-500 font-bold hover:bg-slate-50 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm min-h-[48px]"
                  >
-                     <CalendarClock size={18} />
+                     <CalendarClock size={16} />
                      <span className="text-[9px] uppercase tracking-tight leading-none px-1 text-center">{t('jump_to_today')}</span>
                  </button>
                  
                  <button 
                     onClick={() => setIsWizardOpen(true)} 
-                    className="py-2 bg-white border border-purple-200 rounded-xl text-purple-600 font-bold hover:bg-purple-50 transition-all flex flex-col items-center justify-center gap-1 shadow-sm min-h-[60px]"
+                    className="py-1.5 bg-white border border-purple-200 rounded-xl text-purple-600 font-bold hover:bg-purple-50 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm min-h-[48px]"
                  >
-                     <Wand2 size={18} />
+                     <Wand2 size={16} />
                      <span className="text-[9px] uppercase tracking-tight leading-none px-1 text-center">{t('situation_wizard')}</span>
                  </button>
 
                  <button 
                     onClick={() => setIsPaintMode(!isPaintMode)}
-                    className={`py-2 border rounded-xl font-bold transition-all flex flex-col items-center justify-center gap-1 shadow-sm min-h-[60px]
+                    className={`py-1.5 border rounded-xl font-bold transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm min-h-[48px]
                         ${isPaintMode ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50'}
                     `}
                 >
-                    {isPaintMode ? <Check size={18} /> : <PaintBucket size={18} />}
+                    {isPaintMode ? <Check size={16} /> : <PaintBucket size={16} />}
                     <span className="text-[9px] uppercase tracking-tight leading-none px-1 text-center">{t('quick_paint')}</span>
                 </button>
             </div>
