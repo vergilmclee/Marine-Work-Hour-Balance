@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { DayEntry, EntryType, HOURS_CONFIG } from '../types';
 import { Briefcase, Sun, Calendar, Clock, Edit3, GraduationCap, ArrowRightCircle, MapPin, AlertCircle, ArrowRight, Check, MinusCircle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface DayCardProps {
   entry: DayEntry;
@@ -11,6 +12,8 @@ interface DayCardProps {
 }
 
 const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => {
+  const { t, language } = useLanguage();
+
   // Local state for calculator to ensure smooth typing before committing to entry
   const [startTime, setStartTime] = useState(entry.startTime || '');
   const [endTime, setEndTime] = useState(entry.endTime || '');
@@ -135,21 +138,21 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
   };
 
   // Format Date
-  const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-  const fullDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const dayName = date.toLocaleDateString(language === 'zh-HK' ? 'zh-HK' : 'en-US', { weekday: 'long' });
+  const fullDate = date.toLocaleDateString(language === 'zh-HK' ? 'zh-HK' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   // Filtered out COURSE_TRAINING and TRANSFERRED_OUT as requested
   const TYPE_BUTTONS = [
-      { id: EntryType.REGULAR_SHIFT, label: 'Work', icon: Briefcase },
-      { id: EntryType.OFF_DAY, label: 'Off', icon: Sun },
-      { id: EntryType.LEAVE_VL, label: 'Leave', icon: Calendar },
-      { id: EntryType.CUSTOM, label: 'Custom', icon: Clock },
+      { id: EntryType.REGULAR_SHIFT, label: t('type_work'), icon: Briefcase },
+      { id: EntryType.OFF_DAY, label: t('type_off'), icon: Sun },
+      { id: EntryType.LEAVE_VL, label: t('type_vl'), icon: Calendar },
+      { id: EntryType.CUSTOM, label: t('type_custom'), icon: Clock },
   ];
 
   const QUICK_TYPES = [
-      { id: EntryType.LEAVE_VL, label: 'V/L' },
-      { id: EntryType.LEAVE_HOLIDAY, label: 'H/L' },
-      { id: EntryType.TIME_OFF, label: 'T/O' },
+      { id: EntryType.LEAVE_VL, label: t('type_vl') },
+      { id: EntryType.LEAVE_HOLIDAY, label: t('type_hl') },
+      { id: EntryType.TIME_OFF, label: t('type_to') },
   ];
 
   const isWizardType = entry.type === EntryType.COURSE_TRAINING || entry.type === EntryType.TRANSFERRED_OUT;
@@ -186,10 +189,10 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
                   <AlertCircle size={16} className="text-slate-400 mt-0.5 shrink-0" />
                   <div>
                       <div className="text-xs font-bold text-slate-700 uppercase">
-                          {entry.type === EntryType.COURSE_TRAINING ? 'Training Course' : 'Redeployed (Transferred)'}
+                          {entry.type === EntryType.COURSE_TRAINING ? t('type_course') : t('redeploy')}
                       </div>
                       <div className="text-[10px] text-slate-500 leading-tight mt-0.5">
-                          This day is managed by the Situation Wizard. To edit details, use the Wizard. Select an option below to overwrite.
+                          {t('managed_by_wizard')}
                       </div>
                   </div>
               </div>
@@ -197,7 +200,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
 
           {/* Grid Type Selection */}
           <div className="bg-white rounded-xl border border-black/5 p-2 shadow-sm space-y-2">
-             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-1">Set Status</label>
+             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-1">{t('set_status')}</label>
              <div className="grid grid-cols-4 gap-2">
                  {TYPE_BUTTONS.map(btn => (
                      <button
@@ -242,7 +245,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
              <div className="text-slate-300"><Edit3 size={14} /></div>
              <input 
                 type="text" 
-                placeholder="Add a note..." 
+                placeholder={t('add_note')}
                 value={entry.note}
                 onChange={handleNoteChange}
                 className="w-full text-xs py-1 outline-none text-slate-600 placeholder-slate-300 bg-transparent" 
@@ -256,7 +259,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
                     onClick={() => setType(EntryType.TIME_OFF)}
                     className="w-full py-2 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
                   >
-                      <MinusCircle size={14} /> Report Absence / Time Off (T/O)
+                      <MinusCircle size={14} /> {t('report_absence')}
                   </button>
               </div>
           )}
@@ -269,7 +272,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
                 <div className="flex gap-2">
                     <div className="flex-1">
                          <label className={`text-[9px] font-bold uppercase block mb-1 ${isDeductionType ? 'text-orange-400' : 'text-slate-400'}`}>
-                             {isDeductionType ? 'Time Off Start' : 'Start Time'}
+                             {isDeductionType ? t('time_off_start') : t('work_start')}
                          </label>
                          <input 
                             type="time"
@@ -283,7 +286,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
                     </div>
                     <div className="flex-1">
                          <label className={`text-[9px] font-bold uppercase block mb-1 ${isDeductionType ? 'text-orange-400' : 'text-slate-400'}`}>
-                             {isDeductionType ? 'Time Off End' : 'End Time'}
+                             {isDeductionType ? t('time_off_end') : t('work_end')}
                          </label>
                          <input 
                             type="time"
@@ -298,7 +301,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
                 <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
                     <div className="flex-1">
                         <label className={`text-[9px] font-bold uppercase block mb-1 ${isDeductionType ? 'text-orange-400' : 'text-slate-400'}`}>
-                            {isDeductionType ? 'Adjustment (min)' : 'Time Off / Break (min)'}
+                            {isDeductionType ? t('adjustment_min') : t('break_min')}
                         </label>
                         <input 
                             type="number" 
@@ -312,7 +315,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
                     {/* Result Display */}
                     <div className="flex flex-col items-end pl-2">
                         <label className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${isDeductionType ? 'text-orange-500' : 'text-amber-500'}`}>
-                            {isDeductionType ? 'Deduction' : 'Total Hours'}
+                            {isDeductionType ? t('deduction') : t('total_hours')}
                         </label>
                         <div className="flex items-baseline gap-1">
                             <input
@@ -321,7 +324,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
                                 value={entry.customHours || ''}
                                 onChange={handleManualHoursChange}
                                 placeholder="0"
-                                className={`w-16 text-right text-xl font-black outline-none border-b-2 bg-transparent ${isDeductionType ? 'text-orange-600 border-orange-100 focus:border-orange-400' : 'text-amber-600 border-amber-100 focus:border-amber-500'}`}
+                                className={`w-24 text-right text-xl font-black outline-none border-b-2 bg-transparent ${isDeductionType ? 'text-orange-600 border-orange-100 focus:border-orange-400' : 'text-amber-600 border-amber-100 focus:border-amber-500'}`}
                             />
                             <span className={`text-[10px] font-bold ${isDeductionType ? 'text-orange-400' : 'text-amber-400'}`}>h</span>
                         </div>
@@ -329,7 +332,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
                 </div>
                 {isDeductionType && (
                     <div className="bg-orange-100/50 rounded-lg p-2 mt-2 flex justify-between items-center text-[10px] font-bold text-orange-800">
-                         <span>Shift Credit ({HOURS_CONFIG.REGULAR_SHIFT_HOURS}h) - {entry.customHours?.toFixed(2) || 0}h</span>
+                         <span>{t('shift_credit')} ({HOURS_CONFIG.REGULAR_SHIFT_HOURS}h) - {entry.customHours?.toFixed(2) || 0}h</span>
                          <span className="text-lg">= {(Math.max(0, HOURS_CONFIG.REGULAR_SHIFT_HOURS - (entry.customHours || 0))).toFixed(2)}h</span>
                     </div>
                 )}
@@ -341,22 +344,22 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
               <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
                 <div className="grid grid-cols-2 gap-2">
                    <div className="bg-white rounded-xl border border-purple-100 p-2 px-3">
-                      <label className="text-[9px] font-bold text-purple-400 uppercase block mb-1">Course Name</label>
+                      <label className="text-[9px] font-bold text-purple-400 uppercase block mb-1">{t('course_name')}</label>
                       <input 
                         type="text" 
                         value={entry.courseName || ''}
                         onChange={handleCourseNameChange}
-                        placeholder="Name..."
+                        placeholder="..."
                         className="w-full text-xs font-medium outline-none text-slate-700 placeholder-slate-300"
                       />
                    </div>
                    <div className="bg-white rounded-xl border border-purple-100 p-2 px-3">
-                      <label className="text-[9px] font-bold text-purple-400 uppercase block mb-1">Location</label>
+                      <label className="text-[9px] font-bold text-purple-400 uppercase block mb-1">{t('location')}</label>
                        <input 
                         type="text" 
                         value={entry.courseLocation || ''}
                         onChange={handleCourseLocationChange}
-                        placeholder="Loc..."
+                        placeholder="..."
                         className="w-full text-xs font-medium outline-none text-slate-700 placeholder-slate-300"
                       />
                    </div>
@@ -374,7 +377,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
 
                 <div className="bg-white/50 rounded-lg px-2 py-1 text-right">
                     <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">
-                        Reduction Value: <span className="text-purple-700">{entry.customHours > 0 ? entry.customHours.toFixed(2) : HOURS_CONFIG.AVERAGE_DAILY_HOURS.toFixed(2)}h</span>
+                        {t('reduction_value')}: <span className="text-purple-700">{entry.customHours > 0 ? entry.customHours.toFixed(2) : HOURS_CONFIG.AVERAGE_DAILY_HOURS.toFixed(2)}h</span>
                     </span>
                 </div>
               </div>
@@ -391,7 +394,7 @@ const DayCard: React.FC<DayCardProps> = ({ entry, date, onChange, onClose }) => 
                 onClick={onClose}
                 className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all active:scale-95 flex items-center gap-2 ${getConfirmButtonStyle()}`}
             >
-                <Check size={14} /> Confirm
+                <Check size={14} /> {t('confirm')}
             </button>
          )}
       </div>

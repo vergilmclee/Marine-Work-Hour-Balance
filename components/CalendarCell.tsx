@@ -2,6 +2,7 @@
 import React from 'react';
 import { DayEntry, EntryType } from '../types';
 import { Briefcase, Sun, Calendar, Clock, GraduationCap, ArrowRightCircle, MinusCircle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface CalendarCellProps {
   entry: DayEntry;
@@ -10,6 +11,8 @@ interface CalendarCellProps {
 }
 
 const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick }) => {
+  const { t } = useLanguage();
+
   const getBgColor = () => {
     switch (entry.type) {
       case EntryType.REGULAR_SHIFT: return 'bg-blue-600 shadow-blue-200 border-blue-500 text-white shadow-md';
@@ -43,13 +46,13 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick }) => 
 
   // Tiny badge text
   const getBadge = () => {
-    if (entry.type === EntryType.REGULAR_SHIFT) return 'Work';
-    if (entry.type === EntryType.OFF_DAY) return 'Off';
-    if (entry.type === EntryType.COURSE_TRAINING) return 'Course';
-    if (entry.type === EntryType.LEAVE_VL) return 'V/L';
-    if (entry.type === EntryType.LEAVE_HOLIDAY) return 'H/L';
-    if (entry.type === EntryType.TRANSFERRED_OUT) return 'Moved';
-    if (entry.type === EntryType.TIME_OFF) return 'T/O';
+    if (entry.type === EntryType.REGULAR_SHIFT) return t('type_work');
+    if (entry.type === EntryType.OFF_DAY) return t('type_off');
+    if (entry.type === EntryType.COURSE_TRAINING) return t('type_course');
+    if (entry.type === EntryType.LEAVE_VL) return t('type_vl');
+    if (entry.type === EntryType.LEAVE_HOLIDAY) return t('type_hl');
+    if (entry.type === EntryType.TRANSFERRED_OUT) return t('type_moved');
+    if (entry.type === EntryType.TIME_OFF) return t('type_to');
     if (entry.type === EntryType.CUSTOM) return `${entry.customHours}h`;
     return '...';
   }

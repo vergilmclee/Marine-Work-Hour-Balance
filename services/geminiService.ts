@@ -1,8 +1,9 @@
 
-import { DayEntry, HOURS_CONFIG, EntryType } from '../types';
+import { DayEntry, HOURS_CONFIG, EntryType, Language } from '../types';
+import { TRANSLATIONS } from '../utils/translations';
 
-const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }); // dd/mm/yyyy
+const formatDate = (date: Date, lang: Language): string => {
+  return date.toLocaleDateString(lang === 'zh-HK' ? 'zh-HK' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 const addDays = (date: Date, days: number): Date => {
@@ -21,16 +22,16 @@ export const generateBalanceReport = (
     staffNumber: string,
     cycleStartDate: Date,
     cycleEndDate: Date,
+    language: Language = 'en',
     effectiveTrainingStart?: Date,
     effectiveTrainingEnd?: Date
 ): Promise<string> => {
   
-  // This function is purely local and synchronous in logic, but keeps the Promise signature 
-  // to match potential future async needs or existing interface.
-  
+  const T = TRANSLATIONS[language];
+
   // 1. Gather Data
   const trainingEntries = entries.filter(e => e.type === EntryType.COURSE_TRAINING);
-  let courseName = 'Unspecified Course';
+  let courseName = language === 'zh-HK' ? '未指定課程' : 'Unspecified Course';
   let trainingStart = '';
   let trainingEnd = '';
   
@@ -44,11 +45,11 @@ export const generateBalanceReport = (
      if (effectiveTrainingStart) sDate = effectiveTrainingStart;
      if (effectiveTrainingEnd) eDate = effectiveTrainingEnd;
 
-     trainingStart = formatDate(sDate);
-     trainingEnd = formatDate(eDate);
+     trainingStart = formatDate(sDate, language);
+     trainingEnd = formatDate(eDate, language);
      
      const entryWithName = trainingEntries.find(e => e.courseName && e.courseName.trim() !== '');
-     if (entryWithName) courseName = entryWithName.courseName || 'Unspecified Course';
+     if (entryWithName) courseName = entryWithName.courseName || courseName;
   }
 
   const transferEntry = entries.find(e => e.type === EntryType.TRANSFERRED_OUT);
@@ -57,12 +58,12 @@ export const generateBalanceReport = (
      const transferDayId = entries.findIndex(e => e.type === EntryType.TRANSFERRED_OUT) + 1;
      const lastWorkingDayId = Math.max(1, transferDayId - 1); 
      const lastWorkingDate = addDays(cycleStartDate, lastWorkingDayId - 1);
-     transferDateStr = formatDate(lastWorkingDate);
+     transferDateStr = formatDate(lastWorkingDate, language);
   }
 
   const staffNoDisplay = staffNumber ? staffNumber : "[Staff No.]";
-  const cycleStartStr = formatDate(cycleStartDate);
-  const cycleEndStr = formatDate(cycleEndDate);
+  const cycleStartStr = formatDate(cycleStartDate, language);
+  const cycleEndStr = formatDate(cycleEndDate, language);
   
   // 2. Determine Situation
   let situation = 'E'; // Regular
@@ -75,31 +76,66 @@ export const generateBalanceReport = (
   // 3. Build Statement based on template
   let statement = '';
   
-  switch (situation) {
-      case 'A': // Training Deficit
-          statement = `${staffNoDisplay} took [V/L or Holiday] on [Date of Leave] to balance insufficient work hours in cycle ${cycleStartStr} to ${cycleEndStr} of attendance ${courseName} from/on ${trainingStart} to ${trainingEnd}.`;
-          break;
-      case 'B': // Training Surplus
-          statement = `${staffNoDisplay} took time off lieu from [Time] to [Time] on [Date of OIL] due to surplus working hours in cycle ${cycleStartStr} to ${cycleEndStr} of attendance ${courseName} from/on ${trainingStart} to ${trainingEnd}.`;
-          break;
-      case 'C': // Redeploy Deficit
-          statement = `${staffNoDisplay} took [V/L or Holiday] on [Date of Leave] to balance insufficient work hours in cycle ${cycleStartStr} to ${cycleEndStr} due to redeployment to other team on ${transferDateStr || '[Last Working Day]'}.`;
-          break;
-      case 'D': // Redeploy Surplus
-          statement = `${staffNoDisplay} took time off lieu from [Time] to [Time] on [Date of OIL] due to surplus working hours in cycle ${cycleStartStr} to ${cycleEndStr} prior to redeployment to other team on ${transferDateStr || '[Last Working Day]'}.`;
-          break;
-      case 'E': // Regular
-      default:
-          if (balance >= 0) {
-             statement = `Staff ${staffNoDisplay} has accumulated a net surplus of ${balance.toFixed(2)} hours for the cycle ${cycleStartStr} to ${cycleEndStr}. This surplus is available for Time Off in Lieu (OIL).`;
-          } else {
-             statement = `Staff ${staffNoDisplay} has a net deficit of ${Math.abs(balance).toFixed(2)} hours for the cycle ${cycleStartStr} to ${cycleEndStr}, requiring adjustment via Leave or additional duties.`;
-          }
-          break;
+  // Note: These statement templates are slightly complex to extract to translations.ts perfectly due to dynamic variable insertion.
+  // Constructing them here using simple localized logic.
+  
+  const txt_staff = staffNoDisplay;
+  const txt_cycle = `${cycleStartStr} - ${cycleEndStr}`;
+  
+  if (language === 'zh-HK') {
+      switch (situation) {
+          case 'A': // Training Deficit
+              statement = `${txt_staff} 於 [日期] 申請了 [年假/假期] 以平衡在週期 ${txt_cycle} 期間因參加 ${courseName} (${trainingStart} 至 ${trainingEnd}) 而不足的工作時數。`;
+              break;
+          case 'B': // Training Surplus
+              statement = `${txt_staff} 於 [日期] [時間] 至 [時間] 進行補休，以抵銷在週期 ${txt_cycle} 期間因參加 ${courseName} (${trainingStart} 至 ${trainingEnd}) 而產生的盈餘工時。`;
+              break;
+          case 'C': // Redeploy Deficit
+              statement = `${txt_staff} 於 [日期] 申請了 [年假/假期] 以平衡在週期 ${txt_cycle} 期間因於 ${transferDateStr || '[最後工作日]'} 調配至其他團隊而不足的工作時數。`;
+              break;
+          case 'D': // Redeploy Surplus
+              statement = `${txt_staff} 於 [日期] [時間] 至 [時間] 進行補休，以抵銷在週期 ${txt_cycle} 期間因於 ${transferDateStr || '[最後工作日]'} 調配至其他團隊前所產生的盈餘工時。`;
+              break;
+          default:
+              if (balance >= 0) {
+                 statement = `員工 ${txt_staff} 於週期 ${txt_cycle} 累積了 ${balance.toFixed(2)} 小時的淨盈餘。此盈餘可用於補休 (OIL)。`;
+              } else {
+                 statement = `員工 ${txt_staff} 於週期 ${txt_cycle} 有 ${Math.abs(balance).toFixed(2)} 小時的淨赤字，需透過假期或額外職務進行調整。`;
+              }
+              break;
+      }
+  } else {
+      switch (situation) {
+          case 'A': // Training Deficit
+              statement = `${txt_staff} took [V/L or Holiday] on [Date of Leave] to balance insufficient work hours in cycle ${txt_cycle} of attendance ${courseName} from/on ${trainingStart} to ${trainingEnd}.`;
+              break;
+          case 'B': // Training Surplus
+              statement = `${txt_staff} took time off lieu from [Time] to [Time] on [Date of OIL] due to surplus working hours in cycle ${txt_cycle} of attendance ${courseName} from/on ${trainingStart} to ${trainingEnd}.`;
+              break;
+          case 'C': // Redeploy Deficit
+              statement = `${txt_staff} took [V/L or Holiday] on [Date of Leave] to balance insufficient work hours in cycle ${txt_cycle} due to redeployment to other team on ${transferDateStr || '[Last Working Day]'}.`;
+              break;
+          case 'D': // Redeploy Surplus
+              statement = `${txt_staff} took time off lieu from [Time] to [Time] on [Date of OIL] due to surplus working hours in cycle ${txt_cycle} prior to redeployment to other team on ${transferDateStr || '[Last Working Day]'}.`;
+              break;
+          default:
+              if (balance >= 0) {
+                 statement = `Staff ${txt_staff} has accumulated a net surplus of ${balance.toFixed(2)} hours for the cycle ${txt_cycle}. This surplus is available for Time Off in Lieu (OIL).`;
+              } else {
+                 statement = `Staff ${txt_staff} has a net deficit of ${Math.abs(balance).toFixed(2)} hours for the cycle ${txt_cycle}, requiring adjustment via Leave or additional duties.`;
+              }
+              break;
+      }
   }
 
   // 4. Calculate Suggestions
   let suggestionSection = '';
+  const formatTime = (hours: number) => {
+      const h = Math.floor(hours);
+      const m = Math.round((hours - h) * 60);
+      return `${h}h ${m}m`;
+  };
+
   if (balance > 0.05) {
       const fullShifts = Math.floor(balance / HOURS_CONFIG.REGULAR_SHIFT_HOURS);
       const shiftRemainder = balance % HOURS_CONFIG.REGULAR_SHIFT_HOURS;
@@ -107,27 +143,20 @@ export const generateBalanceReport = (
       const leaveDays = Math.floor(balance / HOURS_CONFIG.LEAVE_HOURS);
       const leaveRemainder = balance % HOURS_CONFIG.LEAVE_HOURS;
 
-      // Calculate time string for remainder
-      const formatTime = (hours: number) => {
-          const h = Math.floor(hours);
-          const m = Math.round((hours - h) * 60);
-          return `${h}h ${m}m`;
-      };
-
       suggestionSection = `
-### 🍃 Suggested OIL Options
-You have a surplus of **${balance.toFixed(2)} hours**.
+### 🍃 ${T.report_options}
+${T.report_surplus_msg} **${balance.toFixed(2)}h**.
 
-**Option 1: Clear with Full Shifts**
-- ${fullShifts > 0 ? `**${fullShifts} Full Shift(s)**` : '0 Full Shifts'}
-- Remaining: **${formatTime(shiftRemainder)}** (${shiftRemainder.toFixed(2)}h)
+**${language === 'zh-HK' ? '方案 1' : 'Option 1'}: ${T.opt_full_shifts}**
+- ${fullShifts > 0 ? `**${fullShifts} ${T.full_shift}**` : `0 ${T.full_shift}`}
+- ${T.remaining}: **${formatTime(shiftRemainder)}** (${shiftRemainder.toFixed(2)}h)
 
-**Option 2: Clear with Leave Days (8.24h)**
-- ${leaveDays > 0 ? `**${leaveDays} Leave Day(s)**` : '0 Leave Days'}
-- Remaining: **${formatTime(leaveRemainder)}** (${leaveRemainder.toFixed(2)}h)
+**${language === 'zh-HK' ? '方案 2' : 'Option 2'}: ${T.opt_leave_days} (8.24h)**
+- ${leaveDays > 0 ? `**${leaveDays} ${T.leave_day}**` : `0 ${T.leave_day}`}
+- ${T.remaining}: **${formatTime(leaveRemainder)}** (${leaveRemainder.toFixed(2)}h)
 
-**Option 3: Exact Time Off**
-- Take exactly **${formatTime(balance)}** off.
+**${language === 'zh-HK' ? '方案 3' : 'Option 3'}: ${T.opt_exact}**
+- ${T.take_exactly} **${formatTime(balance)}** ${T.off}.
 `;
   } else if (balance < -0.05) {
       const deficit = Math.abs(balance);
@@ -135,13 +164,14 @@ You have a surplus of **${balance.toFixed(2)} hours**.
       const shiftsNeeded = deficit / HOURS_CONFIG.REGULAR_SHIFT_HOURS;
       
       suggestionSection = `
-### ⚠️ Deficit Resolution
-You are short **${deficit.toFixed(2)} hours**.
+### ⚠️ ${T.report_deficit_res}
+${T.report_deficit_msg} **${deficit.toFixed(2)}h**.
 
-**Recovery Options:**
-- Apply for **${leaveNeeded.toFixed(1)} Leave Days** (V/L).
-- Work **${shiftsNeeded.toFixed(1)} extra shifts**.
-- Arrange a repayment shift or mutual exchange.
+**${language === 'zh-HK' ? '恢復選項' : 'Recovery Options'}:**
+- ${T.rec_leave} **${leaveNeeded.toFixed(1)} ${T.leave_day}** (V/L).
+- ${T.rec_work} **${shiftsNeeded.toFixed(1)} ${T.rec_shifts}**.
+- ${T.rec_deduct_to} **${deficit.toFixed(2)}h** T/O.
+- ${T.rec_arrange}
 `;
   }
 
@@ -151,40 +181,40 @@ You are short **${deficit.toFixed(2)} hours**.
     .map(e => {
         let details = '';
         if (e.type === EntryType.COURSE_TRAINING) {
-            details = `[Course: ${e.courseName || 'Unspecified'}]`;
+            details = `[${T.type_course}: ${e.courseName || 'Unspecified'}]`;
             if (e.startTime && e.endTime) {
                 details += ` ${e.startTime}-${e.endTime}`;
             }
         } else if (e.type === EntryType.TIME_OFF) {
-            details = `(Deduction: ${e.customHours}hrs)`;
+            details = `(${T.deduction}: ${e.customHours}h)`;
             if (e.startTime && e.endTime) {
                 details += ` ${e.startTime}-${e.endTime}`;
             }
         }
-        return `- **Day ${e.dayId}** (${formatDate(addDays(cycleStartDate, e.dayId - 1))}): ${e.type} ${e.type === EntryType.CUSTOM ? `(${e.customHours}hrs)` : ''} ${details} ${e.note ? `- Note: ${e.note}` : ''}`;
+        return `- **${formatDate(addDays(cycleStartDate, e.dayId - 1), language)}** (Day ${e.dayId}): ${e.type} ${e.type === EntryType.CUSTOM ? `(${e.customHours}h)` : ''} ${details} ${e.note ? `- Note: ${e.note}` : ''}`;
     })
     .join('\n');
 
   // 6. Final Markdown
   const report = `
-### Balance Report
-**Cycle:** ${cycleStartStr} — ${cycleEndStr}
-**Staff:** ${staffNoDisplay}
+### ${T.report_title}
+**${T.report_cycle}:** ${cycleStartStr} — ${cycleEndStr}
+**${T.report_staff}:** ${staffNoDisplay}
 
-**Stats:**
-- Target: ${adjustedTarget.toFixed(2)}h
-- Worked: ${totalWorked.toFixed(2)}h
-- Balance: ${balance.toFixed(2)}h
+**${T.report_stats}:**
+- ${T.target}: ${adjustedTarget.toFixed(2)}h
+- ${T.worked}: ${totalWorked.toFixed(2)}h
+- ${T.net_balance}: ${balance.toFixed(2)}h
 
 ${suggestionSection}
 
 ---
-### Formal Statement
+### ${T.report_formal}
 > ${statement}
 
 ---
-### Event Log
-${irregularityNotes || "No irregularities recorded."}
+### ${T.report_log}
+${irregularityNotes || T.no_irregularities}
 `;
 
   return Promise.resolve(report);

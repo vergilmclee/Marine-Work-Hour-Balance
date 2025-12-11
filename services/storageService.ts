@@ -1,3 +1,4 @@
+
 import { DayEntry, EntryType, UserPrefs } from '../types';
 
 const STORAGE_KEY = 'shiftcycle_data_v1';
@@ -71,11 +72,16 @@ export const saveUserPrefs = (prefs: UserPrefs) => {
 export const loadUserPrefs = (): UserPrefs => {
   try {
     const prefs = localStorage.getItem(PREFS_KEY);
-    if (prefs) return JSON.parse(prefs);
+    if (prefs) {
+        const parsed = JSON.parse(prefs);
+        // Ensure language exists for migration
+        if (!parsed.language) parsed.language = 'en';
+        return parsed;
+    }
   } catch (e) {}
   
-  // Default to June 15, 2024 as requested
-  return { startDate: '2024-06-15', staffNumber: '' }; 
+  // Default to June 15, 2024 as requested, default lang 'en'
+  return { startDate: '2024-06-15', staffNumber: '', language: 'en' }; 
 };
 
 export const clearAllData = () => {

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { DayEntry, EntryType, HOURS_CONFIG } from '../types';
 import { GraduationCap, ArrowRightCircle, Check, X, CalendarRange, Info, MapPin, FileText, Clock, ArrowRight } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface SituationWizardProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ type SituationMode = 'SELECT_TYPE' | 'TRAINING_DATES' | 'REDEPLOY_DATE';
 type InputMode = 'GRID' | 'RANGE';
 
 const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days, startDate, onApply, onApplyRange }) => {
+  const { t, language } = useLanguage();
   const [mode, setMode] = useState<SituationMode>('SELECT_TYPE');
   const [inputMode, setInputMode] = useState<InputMode>('GRID');
   const [selectedDayIds, setSelectedDayIds] = useState<number[]>([]);
@@ -62,7 +64,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
   };
 
   const handleApplyTraining = () => {
-    const note = courseName ? `Training: ${courseName}` : 'Training';
+    const note = courseName ? `${t('wizard_note_training')}: ${courseName}` : t('wizard_note_training');
     const hours = calculateHours();
     const bMins = parseInt(breakMinutes) || 0;
 
@@ -107,7 +109,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
         dayId: d.dayId,
         type: EntryType.TRANSFERRED_OUT,
         customHours: 0,
-        note: 'Transferred'
+        note: t('wizard_note_transfer')
       }));
     
     onApply(updates);
@@ -155,7 +157,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
               `}
             >
               <span className="font-bold">{date.getDate()}</span>
-              <span className="text-[8px] uppercase">{date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+              <span className="text-[8px] uppercase">{date.toLocaleDateString(language === 'zh-HK' ? 'zh-HK' : 'en-US', { weekday: 'short' })}</span>
               {isSelected && <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border border-white translate-x-1/4 -translate-y-1/4" />}
             </button>
           );
@@ -169,9 +171,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
           <div className="mt-4 space-y-4">
               <div className="bg-yellow-50 border border-yellow-100 p-3 rounded-lg flex gap-3 text-xs text-yellow-800">
                   <Info className="w-4 h-4 shrink-0 text-yellow-600" />
-                  <p>
-                      Use this for courses longer than 18 days. The app will automatically update all affected cycles (past or future).
-                  </p>
+                  <p>{t('wizard_range_info')}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
@@ -205,9 +205,9 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
         {/* Header */}
         <div className="p-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
           <h2 className="font-bold text-lg text-slate-800">
-            {mode === 'SELECT_TYPE' && 'Select Situation'}
-            {mode === 'TRAINING_DATES' && 'Select Training Days'}
-            {mode === 'REDEPLOY_DATE' && 'Last Working Day'}
+            {mode === 'SELECT_TYPE' && t('select_situation')}
+            {mode === 'TRAINING_DATES' && t('select_days')}
+            {mode === 'REDEPLOY_DATE' && t('confirm_last_day')}
           </h2>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400">
             <X size={20} />
@@ -227,8 +227,8 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                   <GraduationCap size={24} />
                 </div>
                 <div>
-                  <div className="font-bold text-slate-900">Attend Training / Course</div>
-                  <div className="text-xs text-slate-500 mt-1">Mark specific days where you attend a course. Reduces working target.</div>
+                  <div className="font-bold text-slate-900">{t('attend_training')}</div>
+                  <div className="text-xs text-slate-500 mt-1">{t('attend_training_desc')}</div>
                 </div>
               </button>
 
@@ -240,8 +240,8 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                   <ArrowRightCircle size={24} />
                 </div>
                 <div>
-                  <div className="font-bold text-slate-900">Redeploy / Transfer</div>
-                  <div className="text-xs text-slate-500 mt-1">Leaving the team mid-cycle. Days after your last day will be excluded from target.</div>
+                  <div className="font-bold text-slate-900">{t('redeploy')}</div>
+                  <div className="text-xs text-slate-500 mt-1">{t('redeploy_desc')}</div>
                 </div>
               </button>
             </div>
@@ -254,11 +254,11 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                <div className="mb-6 space-y-3">
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
-                      <FileText size={12} /> Course Name
+                      <FileText size={12} /> {t('course_name')}
                     </label>
                     <input 
                       type="text" 
-                      placeholder="e.g. Safety Orientation"
+                      placeholder="..."
                       value={courseName}
                       onChange={(e) => setCourseName(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
@@ -266,11 +266,11 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
-                      <MapPin size={12} /> Location
+                      <MapPin size={12} /> {t('location')}
                     </label>
                     <input 
                       type="text" 
-                      placeholder="e.g. Training Center A"
+                      placeholder="..."
                       value={courseLocation}
                       onChange={(e) => setCourseLocation(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
@@ -281,7 +281,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                   <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl space-y-3">
                       <div className="flex gap-2">
                         <div className="flex-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Start Time</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t('start_time')}</label>
                             <input 
                                 type="time"
                                 value={startTime}
@@ -293,7 +293,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                             <ArrowRight size={14} />
                         </div>
                         <div className="flex-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">End Time</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t('end_time')}</label>
                             <input 
                                 type="time"
                                 value={endTime}
@@ -305,7 +305,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                       
                       <div className="flex items-center justify-between border-t border-slate-200 pt-2">
                           <div className="w-1/3">
-                              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Break (min)</label>
+                              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t('break_min')}</label>
                               <input 
                                   type="number"
                                   placeholder="0"
@@ -315,7 +315,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                               />
                           </div>
                           <div className="text-right">
-                              <label className="text-[10px] font-bold text-purple-400 uppercase block mb-1">Impact Hours</label>
+                              <label className="text-[10px] font-bold text-purple-400 uppercase block mb-1">{t('impact_hours')}</label>
                               <div className="text-xl font-black text-purple-600">
                                   {calculatedHours > 0 ? calculatedHours.toFixed(2) : '--'} <span className="text-sm font-bold text-purple-300">h</span>
                               </div>
@@ -323,7 +323,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                       </div>
                       
                       <div className="text-[10px] text-slate-400 leading-tight">
-                         Calculates the duration of the course to deduct from your target hours. Leave empty to use default average ({HOURS_CONFIG.AVERAGE_DAILY_HOURS.toFixed(2)}h).
+                         {t('reduction_value')} (Default: {HOURS_CONFIG.AVERAGE_DAILY_HOURS.toFixed(2)}h)
                       </div>
                   </div>
                </div>
@@ -333,19 +333,19 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                      onClick={() => setInputMode('GRID')}
                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${inputMode === 'GRID' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
                    >
-                     Select Days
+                     {t('select_days')}
                    </button>
                    <button 
                      onClick={() => setInputMode('RANGE')}
                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${inputMode === 'RANGE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
                    >
-                     <CalendarRange size={12} /> Date Range
+                     <CalendarRange size={12} /> {t('date_range')}
                    </button>
                </div>
 
               {inputMode === 'GRID' ? (
                 <>
-                    <p className="text-sm text-slate-500">Tap all dates you will be attending training.</p>
+                    <p className="text-sm text-slate-500">{t('tap_dates_training')}</p>
                     {renderCalendarGrid()}
                 </>
               ) : (
@@ -359,8 +359,8 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
               >
                 <Check size={18} /> 
                 {inputMode === 'GRID' 
-                    ? `Apply ${selectedDayIds.length} Training Days` 
-                    : 'Apply Date Range'
+                    ? t('apply_n_days', { n: selectedDayIds.length })
+                    : t('apply_range')
                 }
               </button>
             </div>
@@ -369,14 +369,14 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
           {/* Step 3: Redeploy Date Selection */}
           {mode === 'REDEPLOY_DATE' && (
             <div>
-              <p className="text-sm text-slate-500">Tap the <strong className="text-slate-900">LAST day</strong> you will work for this team in this cycle.</p>
+              <p className="text-sm text-slate-500">{t('tap_last_day')}</p>
               {renderCalendarGrid()}
               <button 
                 onClick={handleApplyRedeploy}
                 disabled={selectedDayIds.length === 0}
                 className="w-full mt-6 bg-slate-800 text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
               >
-                <Check size={18} /> Confirm Last Day
+                <Check size={18} /> {t('confirm_last_day')}
               </button>
             </div>
           )}

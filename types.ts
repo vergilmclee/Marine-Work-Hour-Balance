@@ -39,7 +39,10 @@ export interface ReportRequestData {
   previousBalance: number;
 }
 
+export type Language = 'en' | 'zh-HK';
+
 export interface UserPrefs {
   startDate: string;
   staffNumber: string;
+  language: Language;
 }
