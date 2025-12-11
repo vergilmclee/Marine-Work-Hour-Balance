@@ -1,0 +1,5 @@
+{
+  "name": "Marine Work Hour Balancer",
+  "description": "A smart working hours calculator for 18-day shift cycles. Track regular shifts, handle irregularities like training or team moves, and generate AI-powered reports for balancing surplus or deficit hours.",
+  "requestFramePermissions": []
+}
