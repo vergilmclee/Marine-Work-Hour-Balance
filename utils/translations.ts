@@ -2,7 +2,7 @@
 export const TRANSLATIONS = {
   en: {
     // App
-    app_name: 'ShiftCycle',
+    app_name: 'Work Hour Balancer',
     staff_number: 'Staff Number',
     cycle_start_date: 'Cycle Start Date',
     anchor_date: 'Anchor Date',
@@ -105,7 +105,7 @@ export const TRANSLATIONS = {
     no_irregularities: 'No irregularities recorded.'
   },
   'zh-HK': {
-    app_name: 'ShiftCycle',
+    app_name: 'Work Hour Balancer',
     staff_number: '員工編號',
     cycle_start_date: '週期開始日期',
     anchor_date: '錨點日期',
