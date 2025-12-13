@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DayEntry, EntryType, HOURS_CONFIG } from '../types';
-import { GraduationCap, ArrowRightCircle, Check, X, CalendarRange, Info, MapPin, FileText, Clock, ArrowRight } from 'lucide-react';
+import { GraduationCap, ArrowRightCircle, Check, X, CalendarRange, Info, MapPin, FileText, Clock, ArrowRight, ArrowLeftCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface SituationWizardProps {
@@ -13,7 +13,7 @@ interface SituationWizardProps {
   onApplyRange: (start: Date, end: Date, type: EntryType, note: string, courseName?: string, courseLocation?: string, customHours?: number, startTime?: string, endTime?: string, breakMinutes?: number) => void;
 }
 
-type SituationMode = 'SELECT_TYPE' | 'TRAINING_DATES' | 'REDEPLOY_DATE';
+type SituationMode = 'SELECT_TYPE' | 'TRAINING_DATES' | 'REDEPLOY_DATE' | 'JOIN_DATE';
 type InputMode = 'GRID' | 'RANGE';
 
 const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days, startDate, onApply, onApplyRange }) => {
@@ -116,8 +116,26 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
     onClose();
   };
 
+  const handleApplyJoin = () => {
+    if (selectedDayIds.length !== 1) return;
+    const firstDayId = selectedDayIds[0];
+    
+    // All days BEFORE firstDayId become TRANSFERRED_OUT (Not Joined Yet)
+    const updates = days
+      .filter(d => d.dayId < firstDayId)
+      .map(d => ({
+        dayId: d.dayId,
+        type: EntryType.TRANSFERRED_OUT,
+        customHours: 0,
+        note: t('wizard_note_join')
+      }));
+    
+    onApply(updates);
+    onClose();
+  };
+
   const toggleDaySelection = (dayId: number) => {
-    if (mode === 'REDEPLOY_DATE') {
+    if (mode === 'REDEPLOY_DATE' || mode === 'JOIN_DATE') {
       setSelectedDayIds([dayId]);
     } else {
       if (selectedDayIds.includes(dayId)) {
@@ -140,6 +158,9 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
           let isFutureGhost = false;
           if (mode === 'REDEPLOY_DATE' && selectedDayIds.length > 0) {
              if (day.dayId > selectedDayIds[0]) isFutureGhost = true;
+          }
+          if (mode === 'JOIN_DATE' && selectedDayIds.length > 0) {
+             if (day.dayId < selectedDayIds[0]) isFutureGhost = true;
           }
 
           return (
@@ -208,6 +229,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
             {mode === 'SELECT_TYPE' && t('select_situation')}
             {mode === 'TRAINING_DATES' && t('select_days')}
             {mode === 'REDEPLOY_DATE' && t('confirm_last_day')}
+            {mode === 'JOIN_DATE' && t('confirm_first_day')}
           </h2>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400">
             <X size={20} />
@@ -232,18 +254,33 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                 </div>
               </button>
 
-              <button 
-                onClick={() => setMode('REDEPLOY_DATE')}
-                className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50 text-left hover:bg-slate-100 transition-colors"
-              >
-                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 shrink-0">
-                  <ArrowRightCircle size={24} />
-                </div>
-                <div>
-                  <div className="font-bold text-slate-900">{t('redeploy')}</div>
-                  <div className="text-xs text-slate-500 mt-1">{t('redeploy_desc')}</div>
-                </div>
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => setMode('REDEPLOY_DATE')}
+                  className="flex flex-col gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 text-left hover:bg-slate-100 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+                    <ArrowRightCircle size={20} />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 text-sm">{t('redeploy')}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">{t('redeploy_desc')}</div>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => setMode('JOIN_DATE')}
+                  className="flex flex-col gap-3 p-4 rounded-xl border border-blue-200 bg-blue-50 text-left hover:bg-blue-100 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 shrink-0">
+                    <ArrowLeftCircle size={20} />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 text-sm">{t('join_team')}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">{t('join_team_desc')}</div>
+                  </div>
+                </button>
+              </div>
             </div>
           )}
 
@@ -377,6 +414,21 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                 className="w-full mt-6 bg-slate-800 text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
               >
                 <Check size={18} /> {t('confirm_last_day')}
+              </button>
+            </div>
+          )}
+
+          {/* Step 4: Join Date Selection */}
+          {mode === 'JOIN_DATE' && (
+            <div>
+              <p className="text-sm text-slate-500">{t('tap_first_day')}</p>
+              {renderCalendarGrid()}
+              <button 
+                onClick={handleApplyJoin}
+                disabled={selectedDayIds.length === 0}
+                className="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-lg shadow-blue-200"
+              >
+                <Check size={18} /> {t('confirm_first_day')}
               </button>
             </div>
           )}
