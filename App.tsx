@@ -779,10 +779,4 @@ const AppContent: React.FC = () => {
       )}
     </div>
   );
-};
-
-const App: React.FC = () => {
-  return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+}
