@@ -54,6 +54,20 @@ const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const AppContent: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
 
+  //Add userTeam state
+  const [userTeam, setUserTeam] = useState<number | undefined>();
+
+  //Load/save userTeam in useEffect
+  useEffect(() => {
+  const prefs = loadUserPrefs();
+  setUserTeam(prefs.userTeam);
+  // ... existing code
+}, []);
+
+useEffect(() => {
+  saveUserPrefs({ startDate, staffNumber, language, userTeam });
+}, [startDate, staffNumber, language, userTeam]);
+  
   // Cycle State
   const [cycleIndex, setCycleIndex] = useState(0); // 0 = Anchor cycle. Positive = future, Negative = past.
   const [days, setDays] = useState<DayEntry[]>([]); // Current loaded days
@@ -458,6 +472,18 @@ const AppContent: React.FC = () => {
   // Welcome / Setup Screen
   if (!startDate) {
       return (
+      <div className="space-y-2">
+        <label className="text-xs font-bold">Select Your Team</label>
+        <div className="grid grid-cols-4 gap-2">{[1,2,3,4].map(team => (
+            <button 
+              onClick={() => setUserTeam(team)}
+              className={`p-3 rounded-xl ${userTeam === team ? 'bg-blue-600 text-white' : 'bg-slate-100'}`}
+            >
+              Unit {team}
+            </button>
+        </div>
+          ))}
+        </div>
           <div className="h-[100dvh] flex items-center justify-center p-6 bg-slate-50 overflow-hidden">
               <div className="max-w-sm w-full bg-white p-8 rounded-3xl shadow-2xl border border-slate-100">
                   <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-6 mx-auto shadow-sm">
@@ -490,7 +516,26 @@ const AppContent: React.FC = () => {
                             {t('pick_first_day')}
                          </p>
                     </div>
-
+<div>
+  <label className="text-xs font-bold uppercase text-slate-400 mb-1.5 block tracking-wider">
+    {t('select_team')}
+  </label>
+  <div className="grid grid-cols-4 gap-2">
+    {[1,2,3,4].map(team => (
+      <button
+        key={team}
+        onClick={() => setUserTeam(team)}
+        className={`p-3 rounded-xl font-bold text-sm transition-all ${
+          userTeam === team 
+            ? 'bg-blue-600 text-white shadow-lg' 
+            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+        }`}
+      >
+        {team}
+      </button>
+    ))}
+  </div>
+</div>
                     <div className="flex justify-center gap-2 pt-2">
                         <button onClick={() => setLanguage('en')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${language === 'en' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>English</button>
                         <button onClick={() => setLanguage('zh-HK')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${language === 'zh-HK' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>繁體中文</button>
@@ -554,7 +599,26 @@ const AppContent: React.FC = () => {
                      <h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2">{t('settings')}</h3>
                      <button onClick={() => setShowSettings(false)}><X size={14} className="text-slate-400"/></button>
                  </div>
-                 
+                 <div className="mb-3">
+  <label className="text-[10px] font-bold uppercase text-slate-500 block mb-2">
+    {t('my_team')}
+  </label>
+  <div className="grid grid-cols-4 gap-1.5">
+    {[1,2,3,4].map(team => (
+      <button
+        key={team}
+        onClick={() => setUserTeam(team)}
+        className={`py-2 rounded-lg text-xs font-bold transition-all ${
+          userTeam === team
+            ? 'bg-blue-500 text-white shadow-md'
+            : 'bg-slate-900/50 text-slate-400 hover:bg-white/5'
+        }`}
+      >
+        {team}
+      </button>
+    ))}
+  </div>
+</div>
                  {/* Language Switcher */}
                  <div className="bg-slate-900/50 rounded-xl p-1 flex gap-1 mb-3 border border-slate-700/50">
                      <button 
@@ -693,10 +757,12 @@ const AppContent: React.FC = () => {
                         entry={day} 
                         date={getDayDate(day.dayId)}
                         onClick={() => handleDayClick(day)}
+                        userTeam={userTeam}
                     />
                 ))}
             </div>
         </div>
+
         
         {/* Spacer for Stats Panel - Reduced height to allow more calendar visibility */}
         <div className="h-[120px] shrink-0" />
