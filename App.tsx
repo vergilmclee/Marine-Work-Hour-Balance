@@ -13,11 +13,7 @@ import ReactMarkdown from 'react-markdown';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
 // Custom Icon for High Speed Pursuit Craft (Port Side / Facing Left) - Updated to Sleek Yacht Profile
-interface PursuitCraftProps extends React.SVGProps<SVGSVGElement> {
-  size?: number | string;
-  fill?: string;
-}
-
+interface PursuitCraftProps extends React.SVGProps<SVGSVGElement> { size?: number | string; fill?: string }
 const PursuitCraft: React.FC<PursuitCraftProps> = ({ 
   size = 24, 
   className = "", 
