@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { DayEntry, EntryType, HOURS_CONFIG, Language } from './types';
 import CalendarCell from './components/CalendarCell';
