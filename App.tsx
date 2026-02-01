@@ -779,7 +779,744 @@ const App: React.FC = () => {
   return (
     <LanguageProvider>
       <AppContent />
-    </LanguageProvider>
+    </LanguageProvider>import React from 'react';
+import { DayEntry, EntryType, TEAM_ROTATION } from '../types';
+import { Briefcase, Sun, Calendar, Clock, GraduationCap, ArrowRightCircle, MinusCircle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+
+interface CalendarCellProps {
+  entry: DayEntry;
+  date: Date;
+  onClick: () => void;
+  userTeam?: number; // Highlight if this is user's team
+}
+
+const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userTeam }) => {
+  const { t } = useLanguage();
+
+  const getBgColor = () => {
+    switch (entry.type) {
+      case EntryType.REGULAR_SHIFT: return 'bg-blue-600 shadow-blue-200 border-blue-500 text-white shadow-md';
+      case EntryType.OFF_DAY: return 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50';
+      case EntryType.LEAVE_VL:
+      case EntryType.LEAVE_HOLIDAY: return 'bg-blue-50 border-blue-200 text-blue-700';
+      case EntryType.COURSE_TRAINING: return 'bg-purple-50 border-purple-200 text-purple-700';
+      case EntryType.TRANSFERRED_OUT: return 'bg-[repeating-linear-gradient(45deg,_#f1f5f9,_#f1f5f9_5px,_#e2e8f0_5px,_#e2e8f0_10px)] border-slate-200 text-slate-400 opacity-60';
+      case EntryType.TIME_OFF: return 'bg-orange-50 border-orange-200 text-orange-700';
+      case EntryType.CUSTOM: return 'bg-amber-50 border-amber-200 text-amber-700';
+      default: return 'bg-white border-slate-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (entry.type) {
+      case EntryType.REGULAR_SHIFT: return <Briefcase size={10} className="text-blue-100" />;
+      case EntryType.OFF_DAY: return <Sun size={10} className="opacity-40" />;
+      case EntryType.LEAVE_VL:
+      case EntryType.LEAVE_HOLIDAY: return <Calendar size={10} />;
+      case EntryType.COURSE_TRAINING: return <GraduationCap size={10} />;
+      case EntryType.TRANSFERRED_OUT: return <ArrowRightCircle size={10} />;
+      case EntryType.TIME_OFF: return <MinusCircle size={10} />;
+      case EntryType.CUSTOM: return <Clock size={10} />;
+      default: return null;
+    }
+  };
+
+  const dayNum = date.getDate();
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+
+  // Get teams working this day from rotation pattern
+  const workingTeams = TEAM_ROTATION[entry.dayId] || [];
+  const isUserTeamWorking = userTeam && workingTeams.includes(userTeam);
+
+  // Tiny badge text
+  const getBadge = () => {
+    if (entry.type === EntryType.REGULAR_SHIFT) return t('type_work');
+    if (entry.type === EntryType.OFF_DAY) return t('type_off');
+    if (entry.type === EntryType.COURSE_TRAINING) return t('type_course');
+    if (entry.type === EntryType.LEAVE_VL) return t('type_vl');
+    if (entry.type === EntryType.LEAVE_HOLIDAY) return t('type_hl');
+    if (entry.type === EntryType.TRANSFERRED_OUT) return t('type_moved');
+    if (entry.type === EntryType.TIME_OFF) return t('type_to');
+    if (entry.type === EntryType.CUSTOM) return `${entry.customHours}h`;
+    return '...';
+  }
+
+  const hasNote = entry.note && entry.note.trim().length > 0;
+
+  // Team badge colors
+  const getTeamColor = (team: number) => {
+    switch (team) {
+      case 1: return 'bg-red-500';
+      case 2: return 'bg-blue-500';
+      case 3: return 'bg-green-500';
+      case 4: return 'bg-yellow-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  return (
+    <button 
+      onClick={onClick}
+      className={`
+        rounded-xl border p-1 relative flex flex-col justify-between items-start transition-all duration-200 active:scale-95 h-full min-h-[56px]
+        ${getBgColor()}
+        ${isUserTeamWorking ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}
+      `}
+    >
+      <div className="flex justify-between w-full items-start">
+        <span className={`text-[10px] font-bold leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-white' : isWeekend ? 'text-red-400' : 'text-slate-700'}`}>
+          {dayNum}
+        </span>
+        <div className="flex gap-0.5 items-center">
+          {hasNote && (
+            <div className={`w-1 h-1 rounded-full ${entry.type === EntryType.REGULAR_SHIFT ? 'bg-amber-400' : 'bg-amber-500'}`} />
+          )}
+          {/* Team badges - show which teams are working */}
+          {entry.type === EntryType.REGULAR_SHIFT && workingTeams.length > 0 && (
+            <div className="flex gap-0.5">
+              {workingTeams.map(team => (
+                <div 
+                  key={team}
+                  className={`w-3 h-3 rounded-full ${getTeamColor(team)} text-white text-[6px] font-black flex items-center justify-center border border-white/50`}
+                  title={`Unit ${team}`}
+                >
+                  {team}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col items-start w-full gap-0">
+         <div className="mb-0.5 opacity-80">{getIcon()}</div>
+         <span className={`text-[7px] font-bold uppercase tracking-tight leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-blue-100' : 'opacity-70'}`}>
+            {getBadge()}
+         </span>
+      </div>
+    </button>
+  );
+};
+
+export default CalendarCell;
+
+
+import { DayEntry, EntryType, UserPrefs, TEAM_ROTATION } from '../types';
+
+const STORAGE_KEY = 'shiftcycle_data_v1';
+const PREFS_KEY = 'shiftcycle_prefs_v1';
+
+interface CycleData {
+  [cycleIndex: number]: {
+    days: DayEntry[];
+    previousBalance: number;
+  };
+}
+
+export const generateEmptyCycle = (): DayEntry[] => {
+  return Array.from({ length: 18 }, (_, i) => {
+    const dayId = i + 1;
+    const workingTeams = TEAM_ROTATION[dayId] || [];
+    
+    return {
+      dayId,
+      type: EntryType.OFF_DAY,
+      customHours: 0,
+      note: '',
+      assignedTeam: workingTeams.length === 1 ? workingTeams[0] : undefined
+    };
+  });
+};
+
+export const saveCycleData = (index: number, days: DayEntry[], previousBalance: number) => {
+  try {
+    const existing = localStorage.getItem(STORAGE_KEY);
+    const data: CycleData = existing ? JSON.parse(existing) : {};
+    
+    data[index] = {
+      days,
+      previousBalance
+    };
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error("Failed to save to localStorage", e);
+  }
+};
+
+export const loadCycleData = (index: number): { days: DayEntry[], previousBalance: number } => {
+  try {
+    const existing = localStorage.getItem(STORAGE_KEY);
+    if (!existing) return { days: generateEmptyCycle(), previousBalance: 0 };
+    
+    const data: CycleData = JSON.parse(existing);
+    const cycle = data[index];
+    
+    if (cycle) {
+      return cycle;
+    }
+  } catch (e) {
+    console.error("Failed to load from localStorage", e);
+  }
+  
+  return { days: generateEmptyCycle(), previousBalance: 0 };
+};
+
+export const hasCycleData = (index: number): boolean => {
+  try {
+    const existing = localStorage.getItem(STORAGE_KEY);
+    if (!existing) return false;
+    const data: CycleData = JSON.parse(existing);
+    return !!data[index];
+  } catch (e) {
+    return false;
+  }
+};
+
+export const saveUserPrefs = (prefs: UserPrefs) => {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+};
+
+export const loadUserPrefs = (): UserPrefs => {
+  try {
+    const prefs = localStorage.getItem(PREFS_KEY);
+    if (prefs) {
+        const parsed = JSON.parse(prefs);
+        // Ensure language exists for migration
+        if (!parsed.language) parsed.language = 'en';
+        return parsed;
+    }
+  } catch (e) {}
+  
+  // Default to June 15, 2024 as requested, default lang 'en'
+  return { startDate: '2024-06-15', staffNumber: '', language: 'en' }; 
+};
+
+export const clearAllData = () => {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(PREFS_KEY);
+  localStorage.clear(); // Ensure comprehensive wipe
+};
+
+export const getBackupData = (): string => {
+  const backup = {
+    [STORAGE_KEY]: localStorage.getItem(STORAGE_KEY),
+    [PREFS_KEY]: localStorage.getItem(PREFS_KEY)
+  };
+  return JSON.stringify(backup);
+};
+
+export const restoreBackupData = (jsonStr: string): boolean => {
+  try {
+    const backup = JSON.parse(jsonStr);
+    if (!backup || typeof backup !== 'object') return false;
+
+    // Clear existing known keys
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PREFS_KEY);
+
+    if (backup[STORAGE_KEY]) {
+      localStorage.setItem(STORAGE_KEY, backup[STORAGE_KEY]);
+    }
+    if (backup[PREFS_KEY]) {
+      localStorage.setItem(PREFS_KEY, backup[PREFS_KEY]);
+    }
+
+    return true;
+  } catch (e) {
+    console.error("Failed to restore backup", e);
+    return false;
+  }
+};
+
+# Team Roster Display - Implementation Guide
+
+## Overview
+This enhancement adds team assignment visibility to the Work Hour Balancer app, showing which unit (1, 2, 3, or 4) is working each shift according to the 18-day rotation pattern from your roster.
+
+## Key Changes
+
+### 1. **Team Rotation Pattern** (types.ts)
+Added `TEAM_ROTATION` constant that maps each day (1-18) to the working teams:
+- Based on the roster pattern from the PDF
+- Handles both single-team and multi-team days
+- Example: Day 7 has teams 1 & 2 working together
+
+```typescript
+export const TEAM_ROTATION: Record<number, number[]> = {
+  1: [2],      // Day 1: Team 2 works
+  2: [1],      // Day 2: Team 1 works
+  3: [3],      // Day 3: Team 3 works
+  // ... continues for all 18 days
+};
+```
+
+### 2. **Enhanced Data Structure** (types.ts)
+- Added `assignedTeam` field to `DayEntry` interface
+- Added `userTeam` field to `UserPrefs` interface for user's team assignment
+
+### 3. **Visual Team Indicators** (CalendarCell.tsx)
+Each calendar cell now shows:
+- **Team badges**: Small colored circles (1-4) showing which teams are working
+  - Team 1: Red
+  - Team 2: Blue  
+  - Team 3: Green
+  - Team 4: Yellow
+- **Highlight ring**: Golden ring around cells when user's team is working
+- Badges appear in top-right corner alongside note indicators
+
+### 4. **Team Selection** (Additions needed in App.tsx)
+Add team selector in the welcome screen and settings:
+```tsx
+<div className="space-y-2">
+  <label className="text-xs font-bold">Select Your Team</label>
+  <div className="grid grid-cols-4 gap-2">
+    {[1,2,3,4].map(team => (
+      <button 
+        onClick={() => setUserTeam(team)}
+        className={`p-3 rounded-xl ${userTeam === team ? 'bg-blue-600 text-white' : 'bg-slate-100'}`}
+      >
+        Unit {team}
+      </button>
+    ))}
+  </div>
+</div>
+```
+
+## Integration Steps
+
+### Step 1: Replace Files
+Replace these files in your project with the enhanced versions:
+1. `types.ts` - Core data structures with team support
+2. `components/CalendarCell.tsx` - Calendar cell with team badges
+3. `services/storageService.ts` - Storage with team field
+4. `utils/translations.ts` - Added team-related strings
+
+### Step 2: Update App.tsx
+Add these changes to `App.tsx`:
+
+1. **Add userTeam state**:
+```tsx
+const [userTeam, setUserTeam] = useState<number | undefined>();
+```
+
+2. **Load/save userTeam in useEffect**:
+```tsx
+useEffect(() => {
+  const prefs = loadUserPrefs();
+  setUserTeam(prefs.userTeam);
+  // ... existing code
+}, []);
+
+useEffect(() => {
+  saveUserPrefs({ startDate, staffNumber, language, userTeam });
+}, [startDate, staffNumber, language, userTeam]);
+```
+
+3. **Add team selector to welcome screen** (before language buttons):
+```tsx
+<div>
+  <label className="text-xs font-bold uppercase text-slate-400 mb-1.5 block tracking-wider">
+    {t('select_team')}
+  </label>
+  <div className="grid grid-cols-4 gap-2">
+    {[1,2,3,4].map(team => (
+      <button
+        key={team}
+        onClick={() => setUserTeam(team)}
+        className={`p-3 rounded-xl font-bold text-sm transition-all ${
+          userTeam === team 
+            ? 'bg-blue-600 text-white shadow-lg' 
+            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+        }`}
+      >
+        {team}
+      </button>
+    ))}
+  </div>
+</div>
+```
+
+4. **Add team selector to settings drawer**:
+```tsx
+<div className="mb-3">
+  <label className="text-[10px] font-bold uppercase text-slate-500 block mb-2">
+    {t('my_team')}
+  </label>
+  <div className="grid grid-cols-4 gap-1.5">
+    {[1,2,3,4].map(team => (
+      <button
+        key={team}
+        onClick={() => setUserTeam(team)}
+        className={`py-2 rounded-lg text-xs font-bold transition-all ${
+          userTeam === team
+            ? 'bg-blue-500 text-white shadow-md'
+            : 'bg-slate-900/50 text-slate-400 hover:bg-white/5'
+        }`}
+      >
+        {team}
+      </button>
+    ))}
+  </div>
+</div>
+```
+
+5. **Pass userTeam to CalendarCell**:
+```tsx
+<CalendarCell 
+  key={day.dayId} 
+  entry={day} 
+  date={getDayDate(day.dayId)}
+  onClick={() => handleDayClick(day)}
+  userTeam={userTeam}  // Add this prop
+/>
+```
+
+## How It Works
+
+1. **Pattern Recognition**: The `TEAM_ROTATION` constant follows the 18-day pattern from your roster
+2. **Visual Indicators**: Small numbered circles show which teams work each day
+3. **User Highlighting**: Days when the user's team works get a golden ring highlight
+4. **Multi-Team Days**: Days 7 and 12 show multiple team badges (e.g., teams 1&2, or 2&3)
+
+## Example Display
+
+```
+┌─────────────┐
+│ 15     ②③   │  <- Team 2 & 3 working
+│             │
+│  💼         │
+│  WORK       │
+└─────────────┘
+
+┌─────────────┐  <- Golden ring when user's team
+│ 16  ④🟡     │     is working (Team 4 in this case)
+│             │
+│  💼         │
+│  WORK       │
+└─────────────┘
+```
+
+## Benefits
+
+1. **At-a-glance roster view**: See which teams are scheduled without opening each day
+2. **Personal awareness**: Golden highlight shows your working days immediately
+3. **Team coordination**: Easy to see overlap days when multiple teams work together
+4. **Roster compliance**: Visual verification that your entries match the official roster pattern
+
+## Testing
+
+1. Verify team badges appear on work days (days with REGULAR_SHIFT type)
+2. Check that the rotation pattern matches your PDF roster
+3. Confirm the golden ring appears when your selected team is working
+4. Test multi-team days (Day 7: teams 1&2, Day 12: teams 2&3)
+5. Verify team selection persists after app restart
+
+## Notes
+
+- Team badges only appear on `REGULAR_SHIFT` days
+- The pattern repeats every 18 days across all cycles
+- Team colors are consistent: Red=1, Blue=2, Green=3, Yellow=4
+- Days off (OFF_DAY type) don't show team badges
+
+
+export const TRANSLATIONS = {
+  en: {
+    // App
+    app_name: 'Work Hour Balancer',
+    staff_number: 'Staff Number',
+    cycle_start_date: 'Cycle Start Date',
+    anchor_date: 'Anchor Date',
+    set_anchor_desc: 'Set your anchor date to start tracking.',
+    pick_first_day: 'Pick the first day of ANY previous cycle.',
+    carried_over: 'Carried\nOver',
+    jump_to_today: 'Jump to Today',
+    situation_wizard: 'Situation Wizard',
+    quick_paint: 'Quick Paint Mode',
+    settings: 'Settings',
+    backup: 'Backup',
+    restore: 'Restore',
+    reset_app: 'Reset App',
+    reset_confirm: 'Reset application data? This cannot be undone.',
+    target: 'Target',
+    worked: 'Worked',
+    net_balance: 'Net Balance',
+    analyze_report: 'Analyze Report',
+    suggest_oil: 'Suggest OIL Plan',
+    generated_report: 'Generated Report',
+    copy_clipboard: 'Copy to Clipboard',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    apply: 'Apply',
+    restore_success: 'Data restored successfully. Reloading...',
+    restore_fail: 'Failed to parse backup file.',
+    my_team: 'My Team',
+    select_team: 'Select Your Team',
+    team_unit: 'Unit',
+    
+    // Types & Badges
+    type_work: 'Work',
+    type_off: 'Off',
+    type_vl: 'VL',
+    type_hl: 'HL',
+    type_to: 'T/O',
+    type_custom: 'Custom',
+    type_course: 'Course',
+    type_moved: 'Moved',
+
+    // Wizard
+    select_situation: 'Select Situation',
+    attend_training: 'Attend Training / Course',
+    attend_training_desc: 'Mark specific days where you attend a course.',
+    redeploy: 'Redeploy / Transfer',
+    redeploy_desc: 'Leaving the team mid-cycle.',
+    join_team: 'Join Team / Deploy In',
+    join_team_desc: 'Joining the team mid-cycle.',
+    course_name: 'Course Name',
+    location: 'Location',
+    start_time: 'Start Time',
+    end_time: 'End Time',
+    break_min: 'Break (min)',
+    impact_hours: 'Impact Hours',
+    select_days: 'Select Days',
+    date_range: 'Date Range',
+    apply_n_days: 'Apply {n} Days',
+    apply_range: 'Apply Date Range',
+    confirm_last_day: 'Confirm Last Day',
+    confirm_first_day: 'Confirm First Day',
+    wizard_note_training: 'Training',
+    wizard_note_transfer: 'Transferred',
+    wizard_note_join: 'Joined Team',
+    wizard_range_info: 'Use this for courses longer than 18 days. The app will automatically update all affected cycles.',
+    tap_dates_training: 'Tap all dates you will be attending training.',
+    tap_last_day: 'Tap the LAST day you will work for this team in this cycle.',
+    tap_first_day: 'Tap the FIRST day you will work for this team in this cycle.',
+
+    // DayCard
+    set_status: 'Set Status',
+    add_note: 'Add a note...',
+    report_absence: 'Report Absence / Time Off (T/O)',
+    time_off_start: 'Time Off Start',
+    time_off_end: 'Time Off End',
+    work_start: 'Work Start',
+    work_end: 'Work End',
+    adjustment_min: 'Adjustment (min)',
+    deduction: 'Deduction',
+    total_hours: 'Total Hours',
+    shift_credit: 'Shift Credit',
+    reduction_value: 'Reduction Value',
+    managed_by_wizard: 'This day is managed by the Situation Wizard. To edit details, use the Wizard. Select an option below to overwrite.',
+    
+    // Report Gen
+    report_title: 'Balance Report',
+    report_formal: 'Formal Statement',
+    report_log: 'Event Log',
+    report_stats: 'Stats',
+    report_cycle: 'Cycle',
+    report_staff: 'Staff',
+    report_options: 'Suggested OIL Options',
+    report_deficit_res: 'Deficit Resolution',
+    report_surplus_msg: 'You have a surplus of',
+    report_deficit_msg: 'You are short',
+    opt_full_shifts: 'Clear with Full Shifts',
+    opt_leave_days: 'Clear with Leave Days',
+    opt_exact: 'Exact Time Off',
+    rec_leave: 'Apply for',
+    rec_work: 'Work',
+    rec_deduct_to: 'Deduct',
+    rec_shifts: 'extra shifts',
+    rec_arrange: 'Arrange a repayment shift or mutual exchange.',
+    full_shift: 'Full Shift(s)',
+    leave_day: 'Leave Day(s)',
+    remaining: 'Remaining',
+    take_exactly: 'Take exactly',
+    off: 'off',
+    no_irregularities: 'No irregularities recorded.'
+  },
+  'zh-HK': {
+    app_name: 'Work Hour Balancer',
+    staff_number: '員工編號',
+    cycle_start_date: '週期開始日期',
+    anchor_date: '錨點日期',
+    set_anchor_desc: '設定您的錨點日期以開始追蹤。',
+    pick_first_day: '選擇任何一個過往週期的第一天。',
+    carried_over: '上期\n結轉',
+    jump_to_today: '跳至今天',
+    situation_wizard: '情況精靈',
+    quick_paint: '快速填色',
+    settings: '設定',
+    backup: '備份',
+    restore: '還原',
+    reset_app: '重置',
+    reset_confirm: '重置應用程式資料？此操作無法還原。',
+    target: '目標',
+    worked: '已工作',
+    net_balance: '淨結餘',
+    analyze_report: '分析報告',
+    suggest_oil: '建議 OIL 方案',
+    generated_report: '已生成報告',
+    copy_clipboard: '複製到剪貼簿',
+    confirm: '確認',
+    cancel: '取消',
+    apply: '應用',
+    restore_success: '資料已成功還原。正在重新載入...',
+    restore_fail: '無法解析備份檔案。',
+    my_team: '我的小隊',
+    select_team: '選擇您的小隊',
+    team_unit: '小隊',
+    
+    type_work: '工作',
+    type_off: '休息',
+    type_vl: '年假',
+    type_hl: '法定假日',
+    type_to: '超時工作補償',
+    type_custom: '自訂',
+    type_course: '課程',
+    type_moved: '調走',
+
+    select_situation: '選擇情況',
+    attend_training: '參加訓練 / 課程',
+    attend_training_desc: '標記參加課程的日子。',
+    redeploy: '調配 / 轉移',
+    redeploy_desc: '在週期中途離開團隊。',
+    join_team: '調配至此團隊',
+    join_team_desc: '在週期中途加入團隊。',
+    course_name: '課程名稱',
+    location: '地點',
+    start_time: '開始時間',
+    end_time: '結束時間',
+    break_min: '休息 (分鐘)',
+    impact_hours: '影響時數',
+    select_days: '選擇日子',
+    date_range: '日期範圍',
+    apply_n_days: '應用 {n} 天',
+    apply_range: '應用日期範圍',
+    confirm_last_day: '確認最後工作日',
+    confirm_first_day: '確認第一工作日',
+    wizard_note_training: '訓練',
+    wizard_note_transfer: '已調走',
+    wizard_note_join: '加入團隊',
+    wizard_range_info: '用於超過 18 天的課程。應用程式會自動更新所有受影響的週期。',
+    tap_dates_training: '點擊所有您將參加訓練的日期。',
+    tap_last_day: '點擊您在此週期中為此團隊工作的最後一天。',
+    tap_first_day: '點擊您在此週期中為此團隊工作的第一天。',
+
+    set_status: '設定狀態',
+    add_note: '新增備註...',
+    report_absence: '報告缺勤 / 補休 (T/O)',
+    time_off_start: '缺勤開始',
+    time_off_end: '缺勤結束',
+    work_start: '工作開始',
+    work_end: '工作結束',
+    adjustment_min: '調整 (分鐘)',
+    deduction: '扣減',
+    total_hours: '總時數',
+    shift_credit: '更份時數',
+    reduction_value: '扣減值',
+    managed_by_wizard: '此日由情況精靈管理。如需編輯，請使用精靈。選擇下方選項可覆蓋設定。',
+    
+    report_title: '結餘報告',
+    report_formal: '正式聲明',
+    report_log: '事件記錄',
+    report_stats: '統計',
+    report_cycle: '週期',
+    report_staff: '員工',
+    report_options: '建議補休 (OIL) 方案',
+    report_deficit_res: '赤字解決方案',
+    report_surplus_msg: '您有盈餘',
+    report_deficit_msg: '您欠缺',
+    opt_full_shifts: '以全更抵銷',
+    opt_leave_days: '以年假抵銷',
+    opt_exact: '精確補休',
+    rec_leave: '申請',
+    rec_work: '工作',
+    rec_deduct_to: '扣除',
+    rec_shifts: '額外更份',
+    rec_arrange: '安排補更或互換更份。',
+    full_shift: '個全更',
+    leave_day: '天年假',
+    remaining: '剩餘',
+    take_exactly: '取剛好',
+    off: '休假',
+    no_irregularities: '沒有記錄異常情況。'
+  }
+};
+
+
+export enum EntryType {
+  REGULAR_SHIFT = 'REGULAR_SHIFT', // 24.72 hrs
+  OFF_DAY = 'OFF_DAY', // 0 hrs
+  LEAVE_VL = 'LEAVE_VL', // 8.24 hrs
+  LEAVE_HOLIDAY = 'LEAVE_HOLIDAY', // 8.24 hrs
+  COURSE_TRAINING = 'COURSE_TRAINING', // Reduces target
+  TRANSFERRED_OUT = 'TRANSFERRED_OUT', // Reduces target (Redeployed)
+  TIME_OFF = 'TIME_OFF', // Deducts from work hours (T/O)
+  CUSTOM = 'CUSTOM' // User defined
+}
+
+export interface DayEntry {
+  dayId: number;
+  type: EntryType;
+  customHours: number;
+  note: string;
+  courseName?: string;
+  courseLocation?: string;
+  startTime?: string;
+  endTime?: string;
+  breakMinutes?: number;
+  assignedTeam?: number; // 1, 2, 3, or 4 - which team is working this shift
+}
+
+export const HOURS_CONFIG = {
+  CYCLE_DAYS: 18,
+  TARGET_HOURS: 123.6,
+  REGULAR_SHIFT_HOURS: 24.72,
+  LEAVE_HOURS: 8.24,
+  AVERAGE_DAILY_HOURS: 6.866666666666667, // 123.6 / 18
+};
+
+// Team rotation pattern for 18-day cycle based on the roster
+// Maps dayId (1-18) to which teams are working
+export const TEAM_ROTATION: Record<number, number[]> = {
+  1: [2],      // Day 1: Team 2 works
+  2: [1],      // Day 2: Team 1 works
+  3: [3],      // Day 3: Team 3 works
+  4: [2],      // Day 4: Team 2 works
+  5: [4],      // Day 5: Team 4 works
+  6: [3],      // Day 6: Team 3 works
+  7: [1, 2],   // Day 7: Teams 1 & 2 work
+  8: [4],      // Day 8: Team 4 works
+  9: [3],      // Day 9: Team 3 works
+  10: [1],     // Day 10: Team 1 works
+  11: [4],     // Day 11: Team 4 works
+  12: [2, 3],  // Day 12: Teams 2 & 3 work
+  13: [1],     // Day 13: Team 1 works
+  14: [4],     // Day 14: Team 4 works
+  15: [3],     // Day 15: Team 3 works
+  16: [1],     // Day 16: Team 1 works
+  17: [2],     // Day 17: Team 2 works
+  18: [4]      // Day 18: Team 4 works
+};
+
+export interface ReportRequestData {
+  entries: DayEntry[];
+  totalWorked: number;
+  balance: number;
+  adjustedTarget: number;
+  trainingDays: number;
+  previousBalance: number;
+}
+
+export type Language = 'en' | 'zh-HK';
+
+export interface UserPrefs {
+  startDate: string;
+  staffNumber: string;
+  language: Language;
+  userTeam?: number; // User's assigned team (1-4)
+}
+
   );
 };
 
