@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { DayEntry, EntryType, TEAM_ROTATION } from '../types';
+import { DayEntry, EntryType } from '../types';
 import { Briefcase, Sun, Calendar, Clock, GraduationCap, ArrowRightCircle, MinusCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -7,10 +8,9 @@ interface CalendarCellProps {
   entry: DayEntry;
   date: Date;
   onClick: () => void;
-  userTeam?: number; // Highlight if this is user's team
 }
 
-const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userTeam }) => {
+const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick }) => {
   const { t } = useLanguage();
 
   const getBgColor = () => {
@@ -44,10 +44,6 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
   const dayNum = date.getDate();
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
-  // Get teams working this day from rotation pattern
-  const workingTeams = TEAM_ROTATION[entry.dayId] || [];
-  const isUserTeamWorking = userTeam && workingTeams.includes(userTeam);
-
   // Tiny badge text
   const getBadge = () => {
     if (entry.type === EntryType.REGULAR_SHIFT) return t('type_work');
@@ -63,49 +59,21 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
 
   const hasNote = entry.note && entry.note.trim().length > 0;
 
-  // Team badge colors
-  const getTeamColor = (team: number) => {
-    switch (team) {
-      case 1: return 'bg-red-500';
-      case 2: return 'bg-blue-500';
-      case 3: return 'bg-green-500';
-      case 4: return 'bg-yellow-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
   return (
     <button 
       onClick={onClick}
       className={`
         rounded-xl border p-1 relative flex flex-col justify-between items-start transition-all duration-200 active:scale-95 h-full min-h-[56px]
         ${getBgColor()}
-        ${isUserTeamWorking ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}
       `}
     >
       <div className="flex justify-between w-full items-start">
         <span className={`text-[10px] font-bold leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-white' : isWeekend ? 'text-red-400' : 'text-slate-700'}`}>
           {dayNum}
         </span>
-        <div className="flex gap-0.5 items-center">
-          {hasNote && (
-            <div className={`w-1 h-1 rounded-full ${entry.type === EntryType.REGULAR_SHIFT ? 'bg-amber-400' : 'bg-amber-500'}`} />
-          )}
-          {/* Team badges - show which teams are working */}
-          {entry.type === EntryType.REGULAR_SHIFT && workingTeams.length > 0 && (
-            <div className="flex gap-0.5">
-              {workingTeams.map(team => (
-                <div 
-                  key={team}
-                  className={`w-3 h-3 rounded-full ${getTeamColor(team)} text-white text-[6px] font-black flex items-center justify-center border border-white/50`}
-                  title={`Unit ${team}`}
-                >
-                  {team}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {hasNote && (
+          <div className={`w-1 h-1 rounded-full ${entry.type === EntryType.REGULAR_SHIFT ? 'bg-amber-400' : 'bg-amber-500'}`} />
+        )}
       </div>
 
       <div className="flex flex-col items-start w-full gap-0">

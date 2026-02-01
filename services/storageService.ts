@@ -1,5 +1,5 @@
 
-import { DayEntry, EntryType, UserPrefs, TEAM_ROTATION } from '../types';
+import { DayEntry, EntryType, UserPrefs } from '../types';
 
 const STORAGE_KEY = 'shiftcycle_data_v1';
 const PREFS_KEY = 'shiftcycle_prefs_v1';
@@ -12,18 +12,12 @@ interface CycleData {
 }
 
 export const generateEmptyCycle = (): DayEntry[] => {
-  return Array.from({ length: 18 }, (_, i) => {
-    const dayId = i + 1;
-    const workingTeams = TEAM_ROTATION[dayId] || [];
-    
-    return {
-      dayId,
-      type: EntryType.OFF_DAY,
-      customHours: 0,
-      note: '',
-      assignedTeam: workingTeams.length === 1 ? workingTeams[0] : undefined
-    };
-  });
+  return Array.from({ length: 18 }, (_, i) => ({
+    dayId: i + 1,
+    type: EntryType.OFF_DAY,
+    customHours: 0,
+    note: ''
+  }));
 };
 
 export const saveCycleData = (index: number, days: DayEntry[], previousBalance: number) => {
