@@ -29,6 +29,9 @@ export const TRANSLATIONS = {
     apply: 'Apply',
     restore_success: 'Data restored successfully. Reloading...',
     restore_fail: 'Failed to parse backup file.',
+    my_team: 'My Team',
+    select_team: 'Select Your Team',
+    team_unit: 'Unit',
     
     // Types & Badges
     type_work: 'Work',
@@ -137,6 +140,9 @@ export const TRANSLATIONS = {
     apply: '應用',
     restore_success: '資料已成功還原。正在重新載入...',
     restore_fail: '無法解析備份檔案。',
+    my_team: '我的小隊',
+    select_team: '選擇您的小隊',
+    team_unit: '小隊',
     
     type_work: '工作',
     type_off: '休息',
