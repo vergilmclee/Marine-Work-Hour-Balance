@@ -469,376 +469,79 @@ useEffect(() => {
       reader.readAsText(file);
   };
 
-  // Welcome / Setup Screen
-  if (!startDate) {
-      return (
-      <div className="space-y-2">
-        <label className="text-xs font-bold">Select Your Team</label>
-        <div className="grid grid-cols-4 gap-2">{[1,2,3,4].map(team => (
-            <button 
-              onClick={() => setUserTeam(team)}
-              className={`p-3 rounded-xl ${userTeam === team ? 'bg-blue-600 text-white' : 'bg-slate-100'}`}
-            >
-              Unit {team}
-            </button>
-        </div>
-          ))}
-        </div>
-          <div className="h-[100dvh] flex items-center justify-center p-6 bg-slate-50 overflow-hidden">
-              <div className="max-w-sm w-full bg-white p-8 rounded-3xl shadow-2xl border border-slate-100">
-                  <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-6 mx-auto shadow-sm">
-                      <PursuitCraft size={32} fill="currentColor" className="text-blue-500" />
-                  </div>
-                  <h1 className="text-2xl font-black text-slate-900 text-center mb-2 tracking-tight">{t('app_name')}</h1>
-                  <p className="text-slate-500 text-center mb-8 text-sm">{t('set_anchor_desc')}</p>
-                  
-                  <div className="space-y-5">
-                    <div>
-                        <label className="text-xs font-bold uppercase text-slate-400 mb-1.5 block tracking-wider">{t('staff_number')}</label>
-                        <input 
-                            type="text" 
-                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700 placeholder-slate-300"
-                            placeholder="e.g. 12345"
-                            value={staffNumber}
-                            onChange={(e) => setStaffNumber(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="text-xs font-bold uppercase text-slate-400 mb-1.5 block tracking-wider">{t('cycle_start_date')}</label>
-                        <input 
-                            type="date" 
-                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700"
-                            value={startDate} 
-                            onChange={(e) => setStartDate(e.target.value)}
-                        />
-                         <p className="text-[10px] text-slate-400 mt-2.5 leading-relaxed bg-blue-50 p-2 rounded-lg text-blue-600">
-                            <Info size={10} className="inline mr-1" />
-                            {t('pick_first_day')}
-                         </p>
-                    </div>
-<div>
-  <label className="text-xs font-bold uppercase text-slate-400 mb-1.5 block tracking-wider">
-    {t('select_team')}
-  </label>
-  <div className="grid grid-cols-4 gap-2">
-    {[1,2,3,4].map(team => (
-      <button
-        key={team}
-        onClick={() => setUserTeam(team)}
-        className={`p-3 rounded-xl font-bold text-sm transition-all ${
-          userTeam === team 
-            ? 'bg-blue-600 text-white shadow-lg' 
-            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-        }`}
-      >
-        {team}
-      </button>
-    ))}
-  </div>
-</div>
-                    <div className="flex justify-center gap-2 pt-2">
-                        <button onClick={() => setLanguage('en')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${language === 'en' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>English</button>
-                        <button onClick={() => setLanguage('zh-HK')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${language === 'zh-HK' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>繁體中文</button>
-                    </div>
-                  </div>
-              </div>
-          </div>
-      )
-  }
-
-  const getDayDate = (dayId: number) => {
-      const d = new Date(cycleStartDate);
-      d.setDate(d.getDate() + (dayId - 1));
-      return d;
-  };
-
-  const PAINT_OPTIONS = [
-    { type: EntryType.REGULAR_SHIFT, label: t('type_work'), color: 'bg-blue-600 border-blue-600 text-white' },
-    { type: EntryType.OFF_DAY, label: t('type_off'), color: 'bg-slate-100 border-slate-200 text-slate-500' },
-    { type: EntryType.LEAVE_VL, label: t('type_vl'), color: 'bg-blue-100 border-blue-200 text-blue-700' },
-    { type: EntryType.LEAVE_HOLIDAY, label: t('type_hl'), color: 'bg-indigo-100 border-indigo-200 text-indigo-700' },
-    { type: EntryType.TIME_OFF, label: t('type_to'), color: 'bg-orange-100 border-orange-200 text-orange-700' },
-  ];
-
+// Welcome / Setup Screen
+if (!startDate) {
   return (
-    <div className="flex flex-col h-[100dvh] bg-slate-50 max-w-lg mx-auto shadow-2xl relative overflow-hidden">
-      
-      {/* Top Header */}
-      <div className="bg-slate-900 text-white pt-safe px-6 pb-6 rounded-b-[2.5rem] shadow-xl relative z-20 shrink-0 transition-all duration-300 ease-out">
-         <div className="flex justify-between items-center mb-4 mt-1">
-             <div className="flex items-center gap-3">
-                <PursuitCraft className="text-yellow-400 fill-yellow-400" size={22} />
-                <h1 className="font-black text-xl tracking-tight">{t('app_name')}</h1>
-             </div>
-             
-             {/* Settings Toggle */}
-             <button onClick={() => setShowSettings(!showSettings)} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all active:scale-95">
-                 <Settings size={18} />
-             </button>
-         </div>
-
-         {/* Cycle Nav */}
-         <div className="flex items-center justify-between bg-white/10 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-inner">
-             <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-2 hover:bg-white/10 rounded-xl text-slate-200 transition-colors">
-                 <ChevronLeft size={20} />
-             </button>
-             <div className="text-center px-2">
-                 <div className="text-sm font-bold text-white tracking-wide">
-                     {cycleStartDate.toLocaleDateString(language === 'zh-HK' ? 'zh-HK' : 'en-GB', { month: 'short', day: 'numeric' })} - {cycleEndDate.toLocaleDateString(language === 'zh-HK' ? 'zh-HK' : 'en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
-                 </div>
-             </div>
-             <button onClick={() => handleCycleChange(cycleIndex + 1)} className="p-2 hover:bg-white/10 rounded-xl text-slate-200 transition-colors">
-                 <ChevronRight size={20} />
-             </button>
-         </div>
-         
-         {/* Settings Drawer */}
-         {showSettings && (
-             <div className="absolute top-full left-4 right-4 mt-2 bg-slate-800/95 backdrop-blur-xl rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 border border-white/10 shadow-2xl z-50">
-                 <div className="flex justify-between items-center mb-2">
-                     <h3 className="text-xs font-bold uppercase text-slate-400 flex items-center gap-2">{t('settings')}</h3>
-                     <button onClick={() => setShowSettings(false)}><X size={14} className="text-slate-400"/></button>
-                 </div>
-                 <div className="mb-3">
-  <label className="text-[10px] font-bold uppercase text-slate-500 block mb-2">
-    {t('my_team')}
-  </label>
-  <div className="grid grid-cols-4 gap-1.5">
-    {[1,2,3,4].map(team => (
-      <button
-        key={team}
-        onClick={() => setUserTeam(team)}
-        className={`py-2 rounded-lg text-xs font-bold transition-all ${
-          userTeam === team
-            ? 'bg-blue-500 text-white shadow-md'
-            : 'bg-slate-900/50 text-slate-400 hover:bg-white/5'
-        }`}
-      >
-        {team}
-      </button>
-    ))}
-  </div>
-</div>
-                 {/* Language Switcher */}
-                 <div className="bg-slate-900/50 rounded-xl p-1 flex gap-1 mb-3 border border-slate-700/50">
-                     <button 
-                        onClick={() => setLanguage('en')}
-                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${language === 'en' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-400 hover:bg-white/5'}`}
-                     >
-                         English
-                     </button>
-                     <button 
-                        onClick={() => setLanguage('zh-HK')}
-                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${language === 'zh-HK' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-400 hover:bg-white/5'}`}
-                     >
-                         繁體中文
-                     </button>
-                 </div>
-
-                 <div className="space-y-2 mb-3">
-                     <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">{t('staff_number')}</label>
-                        <input type="text" value={staffNumber} onChange={(e) => setStaffNumber(e.target.value)} className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white outline-none"/>
-                     </div>
-                     <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">{t('anchor_date')}</label>
-                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white outline-none"/>
-                     </div>
-                 </div>
-                 <div className="grid grid-cols-2 gap-2 mb-2">
-                     <button onClick={handleBackup} className="py-2 bg-blue-500/10 text-blue-300 text-[10px] rounded-lg font-bold border border-blue-500/20">{t('backup')}</button>
-                     <label className="py-2 bg-blue-500/10 text-blue-300 text-[10px] rounded-lg font-bold border border-blue-500/20 text-center cursor-pointer">
-                         {t('restore')} <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
-                     </label>
-                 </div>
-                 <button onClick={handleResetApp} className="w-full py-2 bg-red-500/10 text-red-400 text-[10px] rounded-lg font-bold border border-red-500/20">{t('reset_app')}</button>
-             </div>
-         )}
-      </div>
-
-      {/* Flexible Content Area - Contains Tools, Balance & Calendar */}
-      <div className="flex-1 flex flex-col px-4 pt-4 gap-2 overflow-hidden relative z-10">
-        
-        {/* Top Controls Row */}
-        <div className="mb-2 space-y-2">
-            {/* Balance Card */}
-            <div className={`flex items-center justify-between px-4 py-2 rounded-2xl bg-white shadow-sm border ${previousBalance < 0 ? 'border-red-100' : 'border-slate-200'}`}>
-                <div className="text-[10px] font-bold text-slate-400 uppercase leading-tight whitespace-pre-line">{t('carried_over')}</div>
-                <div className="flex items-center gap-1">
-                    <input 
-                        type="number" 
-                        step="0.01"
-                        value={previousBalance}
-                        onChange={(e) => {
-                            setPreviousBalance(parseFloat(e.target.value) || 0);
-                            setIsLinkedBalance(false);
-                        }}
-                        className={`text-right w-28 font-black text-2xl bg-transparent border-none outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
-                    />
-                    <button 
-                        onClick={() => {
-                            const { balance, isLinked } = getEffectivePreviousBalance(cycleIndex);
-                            setPreviousBalance(balance);
-                            setIsLinkedBalance(isLinked);
-                        }}
-                        className={`p-1.5 rounded-full transition-colors ${isLinkedBalance ? 'text-blue-200 hover:text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'}`}
-                        title="Recalculate / Sync Balance"
-                    >
-                        <RefreshCcw size={14} />
-                    </button>
-                </div>
-            </div>
-
-            {/* Tools Row */}
-            <div className="grid grid-cols-3 gap-2">
-                 <button 
-                    onClick={handleJumpToToday} 
-                    className="py-1.5 bg-white border border-slate-200 rounded-xl text-slate-500 font-bold hover:bg-slate-50 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm min-h-[48px]"
-                 >
-                     <CalendarClock size={16} />
-                     <span className="text-[9px] uppercase tracking-tight leading-none px-1 text-center">{t('jump_to_today')}</span>
-                 </button>
-                 
-                 <button 
-                    onClick={() => setIsWizardOpen(true)} 
-                    className="py-1.5 bg-white border border-purple-200 rounded-xl text-purple-600 font-bold hover:bg-purple-50 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm min-h-[48px]"
-                 >
-                     <Wand2 size={16} />
-                     <span className="text-[9px] uppercase tracking-tight leading-none px-1 text-center">{t('situation_wizard')}</span>
-                 </button>
-
-                 <button 
-                    onClick={() => setIsPaintMode(!isPaintMode)}
-                    className={`py-1.5 border rounded-xl font-bold transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm min-h-[48px]
-                        ${isPaintMode ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50'}
-                    `}
-                >
-                    {isPaintMode ? <Check size={16} /> : <PaintBucket size={16} />}
-                    <span className="text-[9px] uppercase tracking-tight leading-none px-1 text-center">{t('quick_paint')}</span>
-                </button>
-            </div>
+    <div className="h-[100dvh] flex items-center justify-center p-6 bg-slate-50 overflow-hidden">
+      <div className="max-w-sm w-full bg-white p-8 rounded-3xl shadow-2xl border border-slate-100">
+        <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-6 mx-auto shadow-sm">
+          <PursuitCraft size={32} fill="currentColor" className="text-blue-500" />
         </div>
+        <h1 className="text-2xl font-black text-slate-900 text-center mb-2 tracking-tight">{t('app_name')}</h1>
+        <p className="text-slate-500 text-center mb-8 text-sm">{t('welcome_message')}</p> {/* add translation if needed */}
 
-        {/* Calendar Container */}
-        <div className="flex-1 bg-white rounded-2xl p-2 shadow-sm border border-slate-100 relative overflow-hidden flex flex-col min-h-0">
-            {/* Paint Palette */}
-            {isPaintMode && (
-                <div className="mb-2 bg-slate-50 p-1.5 rounded-lg flex gap-1 overflow-x-auto border border-slate-100 shrink-0 no-scrollbar">
-                    {PAINT_OPTIONS.map(opt => (
-                        <button
-                            key={opt.type}
-                            onClick={() => setPaintType(opt.type)}
-                            className={`
-                                flex-shrink-0 px-2 py-1.5 rounded-md text-[10px] font-bold border transition-all whitespace-nowrap
-                                ${paintType === opt.type 
-                                    ? `${opt.color} ring-1 ring-offset-1 ring-blue-300` 
-                                    : 'bg-white border-slate-200 text-slate-500 opacity-60'
-                                }
-                            `}
-                        >
-                            {opt.label}
-                        </button>
-                    ))}
-                </div>
-            )}
-            
-            {/* Days Header */}
-            <div className="grid grid-cols-6 gap-1 mb-1 shrink-0">
-                {WEEKDAYS.map(d => (
-                    <div key={d} className="text-center text-[9px] font-bold text-slate-300 uppercase">{d}</div>
-                ))}
-            </div>
-            
-            {/* Grid */}
-            <div className="grid grid-cols-6 gap-1.5 flex-1 min-h-0 content-start overflow-y-auto no-scrollbar pb-1">
-                {days.map(day => (
-                    <CalendarCell 
-                        key={day.dayId} 
-                        entry={day} 
-                        date={getDayDate(day.dayId)}
-                        onClick={() => handleDayClick(day)}
-                        userTeam={userTeam}
-                    />
-                ))}
-            </div>
-        </div>
-
-        
-        {/* Spacer for Stats Panel - Reduced height to allow more calendar visibility */}
-        <div className="h-[120px] shrink-0" />
-      </div>
-
-      {/* Report Modal */}
-      {report && (
-            <div className="absolute inset-x-4 bottom-[220px] top-20 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 z-40 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-10">
-                <div className="flex items-center justify-between p-3 border-b border-slate-100 bg-white">
-                    <div className="flex items-center gap-2 text-indigo-600">
-                        <PursuitCraft size={16} fill="currentColor" className="text-indigo-100" />
-                        <h2 className="font-bold text-sm">{t('generated_report')}</h2>
-                    </div>
-                    <button onClick={() => setReport(null)} className="p-1 rounded-full hover:bg-slate-100"><X size={16} className="text-slate-400"/></button>
-                </div>
-                <div className="flex-1 overflow-y-auto p-4">
-                    <div className="prose prose-sm prose-slate max-w-none">
-                        <ReactMarkdown>{report}</ReactMarkdown>
-                    </div>
-                </div>
-                <div className="p-3 bg-slate-50 border-t border-slate-100">
-                    <button 
-                        onClick={() => navigator.clipboard.writeText(report)} 
-                        className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
-                    >
-                        <Save size={14} /> {t('copy_clipboard')}
-                    </button>
-                </div>
-            </div>
-      )}
-
-      {/* Stats Panel */}
-      <StatsPanel 
-        totalWorked={cycleStats.totalWorked}
-        balance={cycleStats.netBalance}
-        adjustedTarget={cycleStats.adjustedTarget}
-        trainingDays={cycleStats.trainingDays}
-        previousBalance={previousBalance}
-        onGenerate={handleGenerateReport}
-        isLoading={loading}
-      />
-
-      {/* Selected Day Modal */}
-      {selectedDay && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
-             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={() => setSelectedDay(null)} />
-             <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-1 animate-in zoom-in-95 duration-200">
-                 <div className="absolute top-3 right-3 z-10">
-                     <button onClick={() => setSelectedDay(null)} className="p-1.5 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 transition-colors">
-                         <X size={16} />
-                     </button>
-                 </div>
-                 <DayCard 
-                    entry={selectedDay}
-                    date={getDayDate(selectedDay.dayId)}
-                    onChange={handleDayUpdate}
-                    onClose={() => setSelectedDay(null)}
-                />
-             </div>
+        {/* Team Selection */}
+        <div className="space-y-4 mb-6">
+          <label className="text-xs font-bold uppercase text-slate-400 mb-1.5 block tracking-wider">
+            {t('select_team')}
+          </label>
+          <div className="grid grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map(team => (
+              <button
+                key={team}
+                onClick={() => setUserTeam(team)}
+                className={`p-4 rounded-2xl font-bold text-base transition-all shadow-sm ${
+                  userTeam === team
+                    ? 'bg-blue-600 text-white shadow-lg ring-2 ring-blue-400'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300'
+                }`}
+              >
+                {team}
+              </button>
+            ))}
           </div>
-      )}
+        </div>
 
-      {/* Wizard */}
-      {isWizardOpen && (
-        <SituationWizard 
-           isOpen={isWizardOpen}
-           onClose={() => setIsWizardOpen(false)}
-           days={days}
-           startDate={cycleStartDate}
-           onApply={handleSituationApply}
-           onApplyRange={handleSituationApplyRange}
-        />
-      )}
+        {/* Language Selection */}
+        <div className="flex justify-center gap-3 pt-2">
+          <button
+            onClick={() => setLanguage('en')}
+            className={`px-6 py-3 rounded-xl text-sm font-bold transition-all ${
+              language === 'en' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            English
+          </button>
+          <button
+            onClick={() => setLanguage('zh-HK')}
+            className={`px-6 py-3 rounded-xl text-sm font-bold transition-all ${
+              language === 'zh-HK' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            繁體中文
+          </button>
+        </div>
+
+        {/* Start Date - moved here so user can set everything at once */}
+        <div className="mt-8">
+          <label className="text-xs font-bold uppercase text-slate-400 mb-1.5 block tracking-wider">
+            {t('cycle_start_date')}
+          </label>
+          <input
+            type="date"
+            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <p className="text-[10px] text-slate-400 mt-2.5 leading-relaxed bg-blue-50 p-2 rounded-lg text-blue-600">
+            <Info size={10} className="inline mr-1" />
+            {t('pick_first_day')}
+          </p>
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 const App: React.FC = () => {
   return (
