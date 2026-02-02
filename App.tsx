@@ -543,8 +543,9 @@ if (!startDate) {
   );
 };
 
-const App: React.FC = () => {
-  return (
+const App: React.FC = () =>
+{
+	return (
     <LanguageProvider>
       <AppContent />
     </LanguageProvider>
