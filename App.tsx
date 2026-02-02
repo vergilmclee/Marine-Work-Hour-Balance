@@ -541,10 +541,6 @@ if (!startDate) {
       </div>
     </div>
   );
-}
-      )}
-    </div>
-  );
 };
 
 const App: React.FC = () => {
@@ -552,7 +548,7 @@ const App: React.FC = () => {
     <LanguageProvider>
       <AppContent />
     </LanguageProvider>
-    );
+  );
 };
 
 export default App;
