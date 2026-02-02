@@ -542,6 +542,10 @@ if (!startDate) {
     </div>
   );
 }
+      )}
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   return (
