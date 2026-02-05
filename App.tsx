@@ -668,7 +668,7 @@ const AppContent: React.FC = () => {
                     </button>
                     <div className="relative">
                       <input type="file" onChange={handleRestore} className="absolute inset-0 opacity-0 cursor-pointer z-10" accept=".json" />
-                      <button className="w-full h-full p-4 bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-slate-700 transition-colors font-bold text-xs">
+                      <button className="w-full h-full p-4 bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-slate-700 transition-colors font-bold text-xs pointer-events-none">
                         <Upload size={16} className="mb-1" /> {t('restore_data')}
                       </button>
                     </div>
