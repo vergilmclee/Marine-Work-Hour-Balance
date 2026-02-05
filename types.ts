@@ -31,26 +31,30 @@ export const HOURS_CONFIG = {
 };
 
 // Team rotation pattern for 18-day cycle based on the roster
-// Maps dayId (1-18) to which teams are working
+// Pattern A (one of four patterns: A → B → C → D, repeating every 72 days)
+// Each pattern assigns units to the 0930-1013 shift
+// Pattern A sequence: 2, 1, 3, 2, 4, 3, 1/2, 4, 3, 1, 4, 2/3, 1, 4, 3, 1, 2, 4
+// Day-off rotation for Pattern A: 4, 1, 2, 3
+// Maps dayId (1-18) to which teams are working the shift
 export const TEAM_ROTATION: Record<number, number[]> = {
-  1: [2],      // Day 1: Team 2 works
-  2: [1],      // Day 2: Team 1 works
-  3: [3],      // Day 3: Team 3 works
-  4: [2],      // Day 4: Team 2 works
-  5: [4],      // Day 5: Team 4 works
-  6: [3],      // Day 6: Team 3 works
-  7: [1, 2],   // Day 7: Teams 1 & 2 work
-  8: [4],      // Day 8: Team 4 works
-  9: [3],      // Day 9: Team 3 works
-  10: [1],     // Day 10: Team 1 works
-  11: [4],     // Day 11: Team 4 works
-  12: [2, 3],  // Day 12: Teams 2 & 3 work
-  13: [1],     // Day 13: Team 1 works
-  14: [4],     // Day 14: Team 4 works
-  15: [3],     // Day 15: Team 3 works
-  16: [1],     // Day 16: Team 1 works
-  17: [2],     // Day 17: Team 2 works
-  18: [4]      // Day 18: Team 4 works
+  1: [2],      // Day 1: Unit 2
+  2: [1],      // Day 2: Unit 1
+  3: [3],      // Day 3: Unit 3
+  4: [2],      // Day 4: Unit 2
+  5: [4],      // Day 5: Unit 4
+  6: [3],      // Day 6: Unit 3
+  7: [1, 2],   // Day 7: Units 1 & 2 (paired shift)
+  8: [4],      // Day 8: Unit 4
+  9: [3],      // Day 9: Unit 3
+  10: [1],     // Day 10: Unit 1
+  11: [4],     // Day 11: Unit 4
+  12: [2, 3],  // Day 12: Units 2 & 3 (paired shift)
+  13: [1],     // Day 13: Unit 1
+  14: [4],     // Day 14: Unit 4
+  15: [3],     // Day 15: Unit 3
+  16: [1],     // Day 16: Unit 1
+  17: [2],     // Day 17: Unit 2
+  18: [4]      // Day 18: Unit 4
 };
 
 export interface ReportRequestData {
