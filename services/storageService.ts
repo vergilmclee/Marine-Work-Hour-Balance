@@ -1,4 +1,5 @@
 
+
 import { DayEntry, EntryType, UserPrefs, TEAM_ROTATION } from '../types';
 
 const STORAGE_KEY = 'shiftcycle_data_v1';
@@ -15,7 +16,7 @@ export const generateEmptyCycle = (): DayEntry[] => {
   return Array.from({ length: 18 }, (_, i) => {
     const dayId = i + 1;
     const workingTeams = TEAM_ROTATION[dayId] || [];
-    
+
     return {
       dayId,
       type: EntryType.OFF_DAY,
@@ -30,12 +31,12 @@ export const saveCycleData = (index: number, days: DayEntry[], previousBalance: 
   try {
     const existing = localStorage.getItem(STORAGE_KEY);
     const data: CycleData = existing ? JSON.parse(existing) : {};
-    
+
     data[index] = {
       days,
       previousBalance
     };
-    
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
     console.error("Failed to save to localStorage", e);
@@ -46,17 +47,17 @@ export const loadCycleData = (index: number): { days: DayEntry[], previousBalanc
   try {
     const existing = localStorage.getItem(STORAGE_KEY);
     if (!existing) return { days: generateEmptyCycle(), previousBalance: 0 };
-    
+
     const data: CycleData = JSON.parse(existing);
     const cycle = data[index];
-    
+
     if (cycle) {
       return cycle;
     }
   } catch (e) {
     console.error("Failed to load from localStorage", e);
   }
-  
+
   return { days: generateEmptyCycle(), previousBalance: 0 };
 };
 
@@ -79,15 +80,15 @@ export const loadUserPrefs = (): UserPrefs => {
   try {
     const prefs = localStorage.getItem(PREFS_KEY);
     if (prefs) {
-        const parsed = JSON.parse(prefs);
-        // Ensure language exists for migration
-        if (!parsed.language) parsed.language = 'en';
-        return parsed;
+      const parsed = JSON.parse(prefs);
+      // Ensure language exists for migration
+      if (!parsed.language) parsed.language = 'en';
+      return parsed;
     }
-  } catch (e) {}
-  
+  } catch (e) { }
+
   // Default to June 15, 2024 as requested, default lang 'en'
-  return { startDate: '2024-06-15', staffNumber: '', language: 'en' }; 
+  return { startDate: '2024-06-15', staffNumber: '', language: 'en' };
 };
 
 export const clearAllData = () => {

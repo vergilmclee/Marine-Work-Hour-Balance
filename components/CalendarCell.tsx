@@ -1,5 +1,5 @@
 import React from 'react';
-import { DayEntry, EntryType, TEAM_ROTATION } from '../types';
+import { DayEntry, EntryType, getTeamRotationForDate } from '../types';
 import { Briefcase, Sun, Calendar, Clock, GraduationCap, ArrowRightCircle, MinusCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -44,8 +44,9 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
   const dayNum = date.getDate();
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
-  // Get teams working this day from rotation pattern
-  const workingTeams = TEAM_ROTATION[entry.dayId] || [];
+  // Get teams working this day from rotation pattern based on actual date
+  const teamRotation = getTeamRotationForDate(date);
+  const workingTeams = teamRotation[entry.dayId] || [];
   const isUserTeamWorking = userTeam && workingTeams.includes(userTeam);
 
   // Tiny badge text
