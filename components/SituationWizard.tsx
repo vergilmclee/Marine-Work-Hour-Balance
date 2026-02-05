@@ -21,16 +21,16 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
   const [mode, setMode] = useState<SituationMode>('SELECT_TYPE');
   const [inputMode, setInputMode] = useState<InputMode>('GRID');
   const [selectedDayIds, setSelectedDayIds] = useState<number[]>([]);
-  
+
   // Training Details
   const [courseName, setCourseName] = useState('');
   const [courseLocation, setCourseLocation] = useState('');
-  
+
   // Time Calculation State
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [breakMinutes, setBreakMinutes] = useState<string>('0');
-  
+
   // Date Range State
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
@@ -54,7 +54,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
 
     let diffMs = endDateObj.getTime() - startDateObj.getTime();
     if (diffMs < 0) {
-        diffMs += 24 * 60 * 60 * 1000;
+      diffMs += 24 * 60 * 60 * 1000;
     }
 
     const totalMinutes = diffMs / (1000 * 60);
@@ -69,39 +69,39 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
     const bMins = parseInt(breakMinutes) || 0;
 
     if (inputMode === 'RANGE') {
-        if (!rangeStart || !rangeEnd) return;
-        const [sy, sm, sd] = rangeStart.split('-').map(Number);
-        const [ey, em, ed] = rangeEnd.split('-').map(Number);
-        const s = new Date(sy, sm - 1, sd);
-        const e = new Date(ey, em - 1, ed);
-        
-        onApplyRange(
-            s, e, EntryType.COURSE_TRAINING, note, 
-            courseName, courseLocation, hours,
-            startTime, endTime, bMins
-        );
-        onClose();
+      if (!rangeStart || !rangeEnd) return;
+      const [sy, sm, sd] = rangeStart.split('-').map(Number);
+      const [ey, em, ed] = rangeEnd.split('-').map(Number);
+      const s = new Date(sy, sm - 1, sd);
+      const e = new Date(ey, em - 1, ed);
+
+      onApplyRange(
+        s, e, EntryType.COURSE_TRAINING, note,
+        courseName, courseLocation, hours,
+        startTime, endTime, bMins
+      );
+      onClose();
     } else {
-        const updates = selectedDayIds.map(id => ({
-          dayId: id,
-          type: EntryType.COURSE_TRAINING,
-          customHours: hours,
-          note: note,
-          courseName: courseName || undefined,
-          courseLocation: courseLocation || undefined,
-          startTime: startTime || undefined,
-          endTime: endTime || undefined,
-          breakMinutes: bMins
-        }));
-        onApply(updates);
-        onClose();
+      const updates = selectedDayIds.map(id => ({
+        dayId: id,
+        type: EntryType.COURSE_TRAINING,
+        customHours: hours,
+        note: note,
+        courseName: courseName || undefined,
+        courseLocation: courseLocation || undefined,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
+        breakMinutes: bMins
+      }));
+      onApply(updates);
+      onClose();
     }
   };
 
   const handleApplyRedeploy = () => {
     if (selectedDayIds.length !== 1) return;
     const lastDayId = selectedDayIds[0];
-    
+
     // All days AFTER lastDayId become TRANSFERRED_OUT
     const updates = days
       .filter(d => d.dayId > lastDayId)
@@ -111,7 +111,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
         customHours: 0,
         note: t('wizard_note_transfer')
       }));
-    
+
     onApply(updates);
     onClose();
   };
@@ -119,7 +119,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
   const handleApplyJoin = () => {
     if (selectedDayIds.length !== 1) return;
     const firstDayId = selectedDayIds[0];
-    
+
     // All days BEFORE firstDayId become TRANSFERRED_OUT (Not Joined Yet)
     const updates = days
       .filter(d => d.dayId < firstDayId)
@@ -129,7 +129,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
         customHours: 0,
         note: t('wizard_note_join')
       }));
-    
+
     onApply(updates);
     onClose();
   };
@@ -154,13 +154,13 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
         {days.map(day => {
           const date = getDayDate(day.dayId);
           const isSelected = selectedDayIds.includes(day.dayId);
-          
+
           let isFutureGhost = false;
           if (mode === 'REDEPLOY_DATE' && selectedDayIds.length > 0) {
-             if (day.dayId > selectedDayIds[0]) isFutureGhost = true;
+            if (day.dayId > selectedDayIds[0]) isFutureGhost = true;
           }
           if (mode === 'JOIN_DATE' && selectedDayIds.length > 0) {
-             if (day.dayId < selectedDayIds[0]) isFutureGhost = true;
+            if (day.dayId < selectedDayIds[0]) isFutureGhost = true;
           }
 
           return (
@@ -169,9 +169,9 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
               onClick={() => toggleDaySelection(day.dayId)}
               className={`
                 aspect-square rounded-lg border text-xs flex flex-col items-center justify-center relative
-                ${isSelected 
-                  ? 'bg-indigo-600 border-indigo-700 text-white ring-2 ring-indigo-200' 
-                  : isFutureGhost 
+                ${isSelected
+                  ? 'bg-indigo-600 border-indigo-700 text-white ring-2 ring-indigo-200'
+                  : isFutureGhost
                     ? 'bg-slate-100 text-slate-300 border-dashed border-slate-300'
                     : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                 }
@@ -188,41 +188,41 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
   };
 
   const renderDateRangeInput = () => {
-      return (
-          <div className="mt-4 space-y-4">
-              <div className="bg-yellow-50 border border-yellow-100 p-3 rounded-lg flex gap-3 text-xs text-yellow-800">
-                  <Info className="w-4 h-4 shrink-0 text-yellow-600" />
-                  <p>{t('wizard_range_info')}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500 uppercase">From</label>
-                      <input 
-                        type="date" 
-                        value={rangeStart}
-                        onChange={(e) => setRangeStart(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
-                      />
-                  </div>
-                  <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500 uppercase">To</label>
-                       <input 
-                        type="date" 
-                        value={rangeEnd}
-                        onChange={(e) => setRangeEnd(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
-                      />
-                  </div>
-              </div>
+    return (
+      <div className="mt-4 space-y-4">
+        <div className="bg-yellow-50 border border-yellow-100 p-3 rounded-lg flex gap-3 text-xs text-yellow-800">
+          <Info className="w-4 h-4 shrink-0 text-yellow-600" />
+          <p>{t('wizard_range_info')}</p>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500 uppercase">From</label>
+            <input
+              type="date"
+              value={rangeStart}
+              onChange={(e) => setRangeStart(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
+            />
           </div>
-      )
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500 uppercase">To</label>
+            <input
+              type="date"
+              value={rangeEnd}
+              onChange={(e) => setRangeEnd(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 z-[80] backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[90] pb-safe animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto">
-        
+      <div className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[110] pb-safe animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto">
+
         {/* Header */}
         <div className="p-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
           <h2 className="font-bold text-lg text-slate-800">
@@ -237,11 +237,11 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
         </div>
 
         <div className="p-4">
-          
+
           {/* Step 1: Selection Mode */}
           {mode === 'SELECT_TYPE' && (
             <div className="grid grid-cols-1 gap-3">
-              <button 
+              <button
                 onClick={() => setMode('TRAINING_DATES')}
                 className="flex items-center gap-4 p-4 rounded-xl border border-purple-200 bg-purple-50 text-left hover:bg-purple-100 transition-colors"
               >
@@ -255,7 +255,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
               </button>
 
               <div className="grid grid-cols-2 gap-3">
-                <button 
+                <button
                   onClick={() => setMode('REDEPLOY_DATE')}
                   className="flex flex-col gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 text-left hover:bg-slate-100 transition-colors"
                 >
@@ -268,7 +268,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
                   </div>
                 </button>
 
-                <button 
+                <button
                   onClick={() => setMode('JOIN_DATE')}
                   className="flex flex-col gap-3 p-4 rounded-xl border border-blue-200 bg-blue-50 text-left hover:bg-blue-100 transition-colors"
                 >
@@ -287,117 +287,117 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
           {/* Step 2: Training Date Selection */}
           {mode === 'TRAINING_DATES' && (
             <div>
-               {/* Training Details Inputs */}
-               <div className="mb-6 space-y-3">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
-                      <FileText size={12} /> {t('course_name')}
-                    </label>
-                    <input 
-                      type="text" 
-                      placeholder="..."
-                      value={courseName}
-                      onChange={(e) => setCourseName(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
-                      <MapPin size={12} /> {t('location')}
-                    </label>
-                    <input 
-                      type="text" 
-                      placeholder="..."
-                      value={courseLocation}
-                      onChange={(e) => setCourseLocation(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
-                    />
+              {/* Training Details Inputs */}
+              <div className="mb-6 space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
+                    <FileText size={12} /> {t('course_name')}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="..."
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
+                    <MapPin size={12} /> {t('location')}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="..."
+                    value={courseLocation}
+                    onChange={(e) => setCourseLocation(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                {/* Time Calculator for Course Duration */}
+                <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl space-y-3">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t('start_time')}</label>
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-purple-400"
+                      />
+                    </div>
+                    <div className="flex items-center justify-center pt-5 text-slate-300">
+                      <ArrowRight size={14} />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t('end_time')}</label>
+                      <input
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-purple-400"
+                      />
+                    </div>
                   </div>
 
-                  {/* Time Calculator for Course Duration */}
-                  <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl space-y-3">
-                      <div className="flex gap-2">
-                        <div className="flex-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t('start_time')}</label>
-                            <input 
-                                type="time"
-                                value={startTime}
-                                onChange={(e) => setStartTime(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-purple-400"
-                            />
-                        </div>
-                        <div className="flex items-center justify-center pt-5 text-slate-300">
-                            <ArrowRight size={14} />
-                        </div>
-                        <div className="flex-1">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t('end_time')}</label>
-                            <input 
-                                type="time"
-                                value={endTime}
-                                onChange={(e) => setEndTime(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-purple-400"
-                            />
-                        </div>
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-2">
+                    <div className="w-1/3">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t('break_min')}</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={breakMinutes}
+                        onChange={(e) => setBreakMinutes(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-purple-400"
+                      />
+                    </div>
+                    <div className="text-right">
+                      <label className="text-[10px] font-bold text-purple-400 uppercase block mb-1">{t('impact_hours')}</label>
+                      <div className="text-xl font-black text-purple-600">
+                        {calculatedHours > 0 ? calculatedHours.toFixed(2) : '--'} <span className="text-sm font-bold text-purple-300">h</span>
                       </div>
-                      
-                      <div className="flex items-center justify-between border-t border-slate-200 pt-2">
-                          <div className="w-1/3">
-                              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{t('break_min')}</label>
-                              <input 
-                                  type="number"
-                                  placeholder="0"
-                                  value={breakMinutes}
-                                  onChange={(e) => setBreakMinutes(e.target.value)}
-                                  className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-purple-400"
-                              />
-                          </div>
-                          <div className="text-right">
-                              <label className="text-[10px] font-bold text-purple-400 uppercase block mb-1">{t('impact_hours')}</label>
-                              <div className="text-xl font-black text-purple-600">
-                                  {calculatedHours > 0 ? calculatedHours.toFixed(2) : '--'} <span className="text-sm font-bold text-purple-300">h</span>
-                              </div>
-                          </div>
-                      </div>
-                      
-                      <div className="text-[10px] text-slate-400 leading-tight">
-                         {t('reduction_value')} (Default: {HOURS_CONFIG.AVERAGE_DAILY_HOURS.toFixed(2)}h)
-                      </div>
+                    </div>
                   </div>
-               </div>
 
-               <div className="flex bg-slate-100 p-1 rounded-xl mb-4">
-                   <button 
-                     onClick={() => setInputMode('GRID')}
-                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${inputMode === 'GRID' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
-                   >
-                     {t('select_days')}
-                   </button>
-                   <button 
-                     onClick={() => setInputMode('RANGE')}
-                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${inputMode === 'RANGE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
-                   >
-                     <CalendarRange size={12} /> {t('date_range')}
-                   </button>
-               </div>
+                  <div className="text-[10px] text-slate-400 leading-tight">
+                    {t('reduction_value')} (Default: {HOURS_CONFIG.AVERAGE_DAILY_HOURS.toFixed(2)}h)
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex bg-slate-100 p-1 rounded-xl mb-4">
+                <button
+                  onClick={() => setInputMode('GRID')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${inputMode === 'GRID' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+                >
+                  {t('select_days')}
+                </button>
+                <button
+                  onClick={() => setInputMode('RANGE')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${inputMode === 'RANGE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+                >
+                  <CalendarRange size={12} /> {t('date_range')}
+                </button>
+              </div>
 
               {inputMode === 'GRID' ? (
                 <>
-                    <p className="text-sm text-slate-500">{t('tap_dates_training')}</p>
-                    {renderCalendarGrid()}
+                  <p className="text-sm text-slate-500">{t('tap_dates_training')}</p>
+                  {renderCalendarGrid()}
                 </>
               ) : (
-                  renderDateRangeInput()
+                renderDateRangeInput()
               )}
 
-              <button 
+              <button
                 onClick={handleApplyTraining}
                 disabled={inputMode === 'GRID' ? selectedDayIds.length === 0 : (!rangeStart || !rangeEnd)}
                 className="w-full mt-6 bg-purple-600 text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-lg shadow-purple-200"
               >
-                <Check size={18} /> 
-                {inputMode === 'GRID' 
-                    ? t('apply_n_days', { n: selectedDayIds.length })
-                    : t('apply_range')
+                <Check size={18} />
+                {inputMode === 'GRID'
+                  ? t('apply_n_days', { n: selectedDayIds.length })
+                  : t('apply_range')
                 }
               </button>
             </div>
@@ -408,7 +408,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
             <div>
               <p className="text-sm text-slate-500">{t('tap_last_day')}</p>
               {renderCalendarGrid()}
-              <button 
+              <button
                 onClick={handleApplyRedeploy}
                 disabled={selectedDayIds.length === 0}
                 className="w-full mt-6 bg-slate-800 text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
@@ -423,7 +423,7 @@ const SituationWizard: React.FC<SituationWizardProps> = ({ isOpen, onClose, days
             <div>
               <p className="text-sm text-slate-500">{t('tap_first_day')}</p>
               {renderCalendarGrid()}
-              <button 
+              <button
                 onClick={handleApplyJoin}
                 disabled={selectedDayIds.length === 0}
                 className="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-lg shadow-blue-200"

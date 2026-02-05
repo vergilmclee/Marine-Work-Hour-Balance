@@ -617,12 +617,12 @@ const AppContent: React.FC = () => {
 
       {/* Settings Drawer */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setShowSettings(false)} />
-          <div className="relative z-10 w-80 h-full bg-slate-900 text-slate-300 shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right duration-200">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2"><Settings size={20} /> {t('settings')}</h2>
-              <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
+        <>
+          <div className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm" onClick={() => setShowSettings(false)} />
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[110] pb-safe animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center px-6 pt-6 pb-4 border-b border-slate-100 sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Settings size={20} /> {t('settings')}</h2>
+              <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
                 <X size={20} />
               </button>
             </div>
@@ -642,6 +642,43 @@ const AppContent: React.FC = () => {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Language Selection */}
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-3 block tracking-wider">{t('language')}</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setLanguage('en')}
+                    className={`py-3 rounded-xl text-xs font-bold transition-all ${language === 'en' ? 'bg-slate-700 text-white shadow-lg' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => setLanguage('zh-HK')}
+                    className={`py-3 rounded-xl text-xs font-bold transition-all ${language === 'zh-HK' ? 'bg-slate-700 text-white shadow-lg' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                  >
+                    繁體中文
+                  </button>
+                </div>
+              </div>
+
+              {/* Previous Balance Override */}
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-3 block tracking-wider">{t('net_balance')} (Override)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={previousBalance}
+                    onChange={(e) => setPreviousBalance(parseFloat(e.target.value) || 0)}
+                    className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 font-bold outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div className="text-xs font-bold text-slate-500 uppercase">Hours</div>
+                </div>
+                <p className="text-[9px] text-slate-500 mt-2 leading-relaxed">
+                  {t('balance_override_info') || "Manually adjust if the carry-over calculation is incorrect."}
+                </p>
               </div>
 
               {/* Report */}
