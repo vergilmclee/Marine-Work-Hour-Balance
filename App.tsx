@@ -57,17 +57,6 @@ const AppContent: React.FC = () => {
   //Add userTeam state
   const [userTeam, setUserTeam] = useState<number | undefined>();
 
-  //Load/save userTeam in useEffect
-  useEffect(() => {
-    const prefs = loadUserPrefs();
-    setUserTeam(prefs.userTeam);
-    // ... existing code
-  }, []);
-
-  useEffect(() => {
-    saveUserPrefs({ startDate, staffNumber, language, userTeam });
-  }, [startDate, staffNumber, language, userTeam]);
-
   // Cycle State
   const [cycleIndex, setCycleIndex] = useState(0); // 0 = Anchor cycle. Positive = future, Negative = past.
   const [days, setDays] = useState<DayEntry[]>([]); // Current loaded days
@@ -143,6 +132,7 @@ const AppContent: React.FC = () => {
     const prefs = loadUserPrefs();
     setStartDate(prefs.startDate);
     setStaffNumber(prefs.staffNumber || '');
+    setUserTeam(prefs.userTeam);
     // Language is handled by Context, but we might want to sync if it changed externally? 
     // Usually Context handles initialization.
 
@@ -211,8 +201,8 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (!isInitialized || isResettingRef.current) return;
     // Note: language is saved by setLanguage in context
-    saveUserPrefs({ startDate, staffNumber, language });
-  }, [startDate, staffNumber, language, isInitialized]);
+    saveUserPrefs({ startDate, staffNumber, language, userTeam });
+  }, [startDate, staffNumber, language, userTeam, isInitialized]);
 
   // --- Cycle Navigation Handlers ---
   const handleCycleChange = (newIndex: number) => {
