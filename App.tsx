@@ -532,8 +532,9 @@ const AppContent: React.FC = () => {
 
   // Helper to calculate date for a specific day in the cycle
   const getDayDate = (dayId: number) => {
-    const d = new Date(cycleStartDate);
-    d.setDate(d.getDate() + (dayId - 1));
+    const d = new Date(startDate);
+    // Add cycle offset (cycleIndex * 18 days) + day offset (dayId - 1)
+    d.setDate(d.getDate() + (cycleIndex * 18) + (dayId - 1));
     return d;
   };
 
@@ -618,7 +619,7 @@ const AppContent: React.FC = () => {
       {showSettings && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setShowSettings(false)} />
-          <div className="w-80 h-full bg-slate-900 text-slate-300 shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right duration-200">
+          <div className="relative z-10 w-80 h-full bg-slate-900 text-slate-300 shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right duration-200">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-xl font-bold text-white flex items-center gap-2"><Settings size={20} /> {t('settings')}</h2>
               <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
@@ -668,7 +669,7 @@ const AppContent: React.FC = () => {
                     </button>
                     <div className="relative">
                       <input type="file" onChange={handleRestore} className="absolute inset-0 opacity-0 cursor-pointer z-10" accept=".json" />
-                      <button className="w-full h-full p-4 bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-slate-700 transition-colors font-bold text-xs pointer-events-none">
+                      <button className="w-full h-full p-4 bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-slate-700 transition-colors font-bold text-xs">
                         <Upload size={16} className="mb-1" /> {t('restore_data')}
                       </button>
                     </div>
