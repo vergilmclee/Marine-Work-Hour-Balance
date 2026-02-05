@@ -491,8 +491,8 @@ const AppContent: React.FC = () => {
                   key={team}
                   onClick={() => setUserTeam(team)}
                   className={`p-4 rounded-2xl font-bold text-base transition-all shadow-sm ${userTeam === team
-                      ? 'bg-blue-600 text-white shadow-lg ring-2 ring-blue-400'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300'
+                    ? 'bg-blue-600 text-white shadow-lg ring-2 ring-blue-400'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300'
                     }`}
                 >
                   {team}
@@ -705,7 +705,7 @@ const AppContent: React.FC = () => {
     </div>
   );
 };
-};
+
 
 const App: React.FC = () => {
   return (

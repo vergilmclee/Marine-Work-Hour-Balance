@@ -75,7 +75,7 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
   };
 
   return (
-    <button 
+    <button
       onClick={onClick}
       className={`
         rounded-xl border p-1 relative flex flex-col justify-between items-start transition-all duration-200 active:scale-95 h-full min-h-[56px]
@@ -92,10 +92,10 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
             <div className={`w-1 h-1 rounded-full ${entry.type === EntryType.REGULAR_SHIFT ? 'bg-amber-400' : 'bg-amber-500'}`} />
           )}
           {/* Team badges - show which teams are working */}
-          {entry.type === EntryType.REGULAR_SHIFT && workingTeams.length > 0 && (
+          {workingTeams.length > 0 && (
             <div className="flex gap-0.5">
               {workingTeams.map(team => (
-                <div 
+                <div
                   key={team}
                   className={`w-3 h-3 rounded-full ${getTeamColor(team)} text-white text-[6px] font-black flex items-center justify-center border border-white/50`}
                   title={`Unit ${team}`}
@@ -109,10 +109,10 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
       </div>
 
       <div className="flex flex-col items-start w-full gap-0">
-         <div className="mb-0.5 opacity-80">{getIcon()}</div>
-         <span className={`text-[7px] font-bold uppercase tracking-tight leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-blue-100' : 'opacity-70'}`}>
-            {getBadge()}
-         </span>
+        <div className="mb-0.5 opacity-80">{getIcon()}</div>
+        <span className={`text-[7px] font-bold uppercase tracking-tight leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-blue-100' : 'opacity-70'}`}>
+          {getBadge()}
+        </span>
       </div>
     </button>
   );
