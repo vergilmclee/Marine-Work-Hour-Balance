@@ -286,7 +286,10 @@ const AppContent: React.FC = () => {
   };
 
   const handleSituationApply = (updates: Partial<DayEntry>[]) => {
-    setDays(prev => prev.map(d => d.dayId === d.dayId ? { ...d, ...updates.find(u => u.dayId === d.dayId) } : d));
+    setDays(prev => prev.map(d => {
+      const update = updates.find(u => u.dayId === d.dayId);
+      return update ? { ...d, ...update } : d;
+    }));
   };
 
   const handleSituationApplyRange = (
@@ -311,11 +314,9 @@ const AppContent: React.FC = () => {
       const dayInCycle = ((diffDays % 18) + 18) % 18 + 1;
 
       if (!updatesByCycle[cIndex]) {
-        if (cIndex === cycleIndex) {
-          updatesByCycle[cIndex] = [...days];
-        } else {
-          updatesByCycle[cIndex] = loadCycleData(cIndex).days;
-        }
+        updatesByCycle[cIndex] = cIndex === cycleIndex
+          ? [...days]
+          : loadCycleData(cIndex).days;
       }
 
       const cycleDays = updatesByCycle[cIndex];
@@ -366,7 +367,7 @@ const AppContent: React.FC = () => {
       runningBalance = stats.netBalance;
 
       if (idx === cycleIndex) {
-        setDays(cycleDays);
+        setDays([...cycleDays]);
         if (i > 0 && idx === sortedIndices[i - 1] + 1) {
           setPreviousBalance(startBal);
           setIsLinkedBalance(true);
