@@ -719,7 +719,7 @@ const AppContent: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {loading && (
