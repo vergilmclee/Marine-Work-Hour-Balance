@@ -552,12 +552,12 @@ const AppContent: React.FC = () => {
             {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setCycleIndex(cycleIndex - 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronLeft size={20} /></button>
-          <button onClick={handleJumpToToday} className="p-2 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"><CalendarClock size={20} /></button>
-          <button onClick={() => setCycleIndex(cycleIndex + 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronRight size={20} /></button>
-          <button onClick={() => setIsWizardOpen(true)} className="p-2 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"><Wand2 size={20} /></button>
-          <button onClick={() => setShowSettings(true)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><Settings size={20} /></button>
+        <div className="flex gap-1">
+          <button onClick={() => setCycleIndex(cycleIndex - 1)} title={t('jump_to_today')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronLeft size={20} /></button>
+          <button onClick={handleJumpToToday} title={t('jump_to_today')} className="px-2 py-1 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex flex-col items-center gap-0.5"><CalendarClock size={18} /><span className="text-[9px] font-bold leading-none">{t('jump_to_today')}</span></button>
+          <button onClick={() => setCycleIndex(cycleIndex + 1)} title={t('jump_to_today')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronRight size={20} /></button>
+          <button onClick={() => setIsWizardOpen(true)} title={t('situation_wizard')} className="px-2 py-1 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors flex flex-col items-center gap-0.5"><Wand2 size={18} /><span className="text-[9px] font-bold leading-none">{t('situation_wizard')}</span></button>
+          <button onClick={() => setShowSettings(true)} title={t('settings')} className="px-2 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors flex flex-col items-center gap-0.5"><Settings size={18} /><span className="text-[9px] font-bold leading-none">{t('settings')}</span></button>
         </div>
       </div>
 
