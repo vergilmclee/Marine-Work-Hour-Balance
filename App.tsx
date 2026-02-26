@@ -610,6 +610,8 @@ const AppContent: React.FC = () => {
         <SituationWizard
           isOpen={isWizardOpen}
           onClose={() => setIsWizardOpen(false)}
+          days={days}
+          startDate={new Date(startDate)}
           onApply={handleSituationApply}
           onApplyRange={handleSituationApplyRange}
         />
@@ -719,7 +721,7 @@ const AppContent: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {loading && (
