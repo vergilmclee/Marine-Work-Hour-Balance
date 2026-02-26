@@ -563,6 +563,33 @@ const AppContent: React.FC = () => {
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto px-4 pb-48 pt-4 scrollbar-hide">
+        {/* Carried Over Balance Card */}
+        <div className={`flex items-center justify-between px-4 py-2 mb-3 rounded-2xl bg-white shadow-sm border ${previousBalance < 0 ? 'border-red-100' : 'border-slate-200'}`}>
+          <div className="text-[10px] font-bold text-slate-400 uppercase leading-tight whitespace-pre-line">{t('carried_over')}</div>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              step="0.01"
+              value={previousBalance}
+              onChange={(e) => {
+                setPreviousBalance(parseFloat(e.target.value) || 0);
+                setIsLinkedBalance(false);
+              }}
+              className={`text-right w-28 font-black text-2xl bg-transparent border-none outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
+            />
+            <button
+              onClick={() => {
+                const { balance, isLinked } = getEffectivePreviousBalance(cycleIndex);
+                setPreviousBalance(balance);
+                setIsLinkedBalance(isLinked);
+              }}
+              className={`p-1.5 rounded-full transition-colors ${isLinkedBalance ? 'text-blue-200 hover:text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'}`}
+              title="Recalculate / Sync Balance"
+            >
+              <RefreshCcw size={14} />
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-7 gap-2 mb-2">
           {WEEKDAYS.map(d => <div key={d} className="text-center text-[10px] uppercase font-bold text-slate-400">{d}</div>)}
         </div>
