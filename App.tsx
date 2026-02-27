@@ -598,15 +598,58 @@ const AppContent: React.FC = () => {
           {WEEKDAYS.map(d => <div key={d} className="text-center text-[10px] uppercase font-bold text-slate-400">{d}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-2 auto-rows-fr">
-          {days.map(day => (
-            <CalendarCell
-              key={day.dayId}
-              entry={day}
-              date={getDayDate(day.dayId)}
-              onClick={() => handleDayClick(day)}
-              userTeam={userTeam}
-            />
-          ))}
+          {(() => {
+            const firstDate = getDayDate(1);
+            const jsDay = firstDate.getDay(); // 0=Sun,1=Mon,...,6=Sat
+            const startCol = jsDay === 0 ? 6 : jsDay - 1; // Convert to Mon=0,...,Sun=6
+
+            const cells: React.ReactNode[] = [];
+            let lastMonth = -1;
+
+            for (let i = 0; i < startCol; i++) {
+              cells.push(<div key={`empty-${i}`} />);
+            }
+
+            days.forEach((day) => {
+              const date = getDayDate(day.dayId);
+              const month = date.getMonth();
+
+              if (month !== lastMonth) {
+                if (lastMonth !== -1) {
+                  const currentPos = (startCol + day.dayId - 1) % 7;
+                  for (let i = 0; i < (7 - currentPos) % 7; i++) {
+                    cells.push(<div key={`gap-${day.dayId}-${i}`} />);
+                  }
+                  const monthLabel = date.toLocaleDateString(language === 'zh-HK' ? 'zh-HK' : 'en-US', { month: 'long' });
+                  cells.push(
+                    <div key={`month-${month}`} className="col-span-7 flex items-center gap-2 py-1">
+                      <div className="h-px flex-1 bg-slate-200" />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{monthLabel}</span>
+                      <div className="h-px flex-1 bg-slate-200" />
+                    </div>
+                  );
+                  const newJsDay = date.getDay();
+                  const newStartCol = newJsDay === 0 ? 6 : newJsDay - 1;
+                  for (let i = 0; i < newStartCol; i++) {
+                    cells.push(<div key={`empty2-${day.dayId}-${i}`} />);
+                  }
+                }
+                lastMonth = month;
+              }
+
+              cells.push(
+                <CalendarCell
+                  key={day.dayId}
+                  entry={day}
+                  date={date}
+                  onClick={() => handleDayClick(day)}
+                  userTeam={userTeam}
+                />
+              );
+            });
+
+            return cells;
+          })()}
         </div>
       </div>
 
