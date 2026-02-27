@@ -579,15 +579,24 @@ const AppContent: React.FC = () => {
                 setPreviousBalance(parseFloat(e.target.value) || 0);
                 setIsLinkedBalance(false);
               }}
-              className={`text-right w-28 font-black text-2xl bg-transparent border-none outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
+              className={`text-right w-24 font-black text-xl bg-transparent border-none outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
             />
+            {previousBalance !== 0 && (
+              <button
+                onClick={() => { setPreviousBalance(0); setIsLinkedBalance(false); }}
+                className="p-1 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors active:scale-95"
+                title="Clear to 0"
+              >
+                <X size={14} />
+              </button>
+            )}
             <button
               onClick={() => {
                 const { balance, isLinked } = getEffectivePreviousBalance(cycleIndex);
                 setPreviousBalance(balance);
                 setIsLinkedBalance(isLinked);
               }}
-              className={`p-1.5 rounded-full transition-colors ${isLinkedBalance ? 'text-blue-200 hover:text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'}`}
+              className={`p-1 rounded-full transition-colors ${isLinkedBalance ? 'text-blue-200 hover:text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'}`}
               title="Recalculate / Sync Balance"
             >
               <RefreshCcw size={14} />
@@ -711,28 +720,29 @@ const AppContent: React.FC = () => {
         />
       )}
 
-      {/* Settings Drawer */}
+      {/* Settings Dialog */}
       {showSettings && (
         <>
           <div className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm" onClick={() => setShowSettings(false)} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[110] pb-safe animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center px-6 pt-6 pb-4 border-b border-slate-100 sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Settings size={20} /> {t('settings')}</h2>
-              <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <X size={20} />
-              </button>
-            </div>
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm max-h-[50vh] overflow-y-auto pointer-events-auto">
+              <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-slate-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Settings size={18} /> {t('settings')}</h2>
+                <button onClick={() => setShowSettings(false)} className="p-1.5 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                  <X size={18} />
+                </button>
+              </div>
 
-            <div className="space-y-8">
+              <div className="space-y-5 px-5 py-4">
               {/* User Team */}
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-500 mb-3 block tracking-wider">{t('my_team')}</label>
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">{t('my_team')}</label>
                 <div className="grid grid-cols-4 gap-2">
                   {[1, 2, 3, 4].map(team => (
                     <button
                       key={team}
                       onClick={() => setUserTeam(team)}
-                      className={`py-3 rounded-xl text-sm font-bold transition-all ${userTeam === team ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                      className={`py-2 rounded-lg text-sm font-bold transition-all ${userTeam === team ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                     >
                       {team}
                     </button>
@@ -742,17 +752,17 @@ const AppContent: React.FC = () => {
 
               {/* Language Selection */}
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-500 mb-3 block tracking-wider">{t('language')}</label>
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">{t('language')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setLanguage('en')}
-                    className={`py-3 rounded-xl text-xs font-bold transition-all ${language === 'en' ? 'bg-slate-700 text-white shadow-lg' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                    className={`py-2 rounded-lg text-xs font-bold transition-all ${language === 'en' ? 'bg-slate-700 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                   >
                     English
                   </button>
                   <button
                     onClick={() => setLanguage('zh-HK')}
-                    className={`py-3 rounded-xl text-xs font-bold transition-all ${language === 'zh-HK' ? 'bg-slate-700 text-white shadow-lg' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                    className={`py-2 rounded-lg text-xs font-bold transition-all ${language === 'zh-HK' ? 'bg-slate-700 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                   >
                     繁體中文
                   </button>
@@ -761,49 +771,47 @@ const AppContent: React.FC = () => {
 
               {/* Previous Balance Override */}
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-500 mb-3 block tracking-wider">{t('net_balance')} (Override)</label>
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">{t('net_balance')} (Override)</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
                     step="0.5"
                     value={previousBalance}
                     onChange={(e) => setPreviousBalance(parseFloat(e.target.value) || 0)}
-                    className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 font-bold outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
-                  <div className="text-xs font-bold text-slate-500 uppercase">Hours</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase">Hours</div>
                 </div>
-                <p className="text-[9px] text-slate-500 mt-2 leading-relaxed">
-                  {t('balance_override_info') || "Manually adjust if the carry-over calculation is incorrect."}
-                </p>
               </div>
 
               {/* Report moved to main screen overlay */}
 
               {/* Data Management */}
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-500 mb-3 block tracking-wider">{t('data_management')}</label>
-                <div className="space-y-3">
-                  <button onClick={handleResetApp} className="w-full p-4 bg-red-500/10 text-red-400 rounded-xl flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors font-bold text-sm">
-                    <Eraser size={16} /> {t('reset_data')}
-                  </button>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={handleBackup} className="p-4 bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-slate-700 transition-colors font-bold text-xs">
-                      <Download size={16} className="mb-1" /> {t('backup_data')}
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">{t('data_management')}</label>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={handleBackup} className="py-2 px-3 bg-slate-100 rounded-lg flex items-center justify-center gap-1.5 hover:bg-slate-200 transition-colors font-bold text-xs text-slate-600">
+                      <Download size={14} /> {t('backup_data')}
                     </button>
                     <div className="relative">
                       <input type="file" onChange={handleRestore} className="absolute inset-0 opacity-0 cursor-pointer z-10" accept=".json" />
-                      <button className="w-full h-full p-4 bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-slate-700 transition-colors font-bold text-xs">
-                        <Upload size={16} className="mb-1" /> {t('restore_data')}
+                      <button className="w-full py-2 px-3 bg-slate-100 rounded-lg flex items-center justify-center gap-1.5 hover:bg-slate-200 transition-colors font-bold text-xs text-slate-600">
+                        <Upload size={14} /> {t('restore_data')}
                       </button>
                     </div>
                   </div>
+                  <button onClick={handleResetApp} className="w-full py-2 bg-red-50 text-red-500 rounded-lg flex items-center justify-center gap-1.5 hover:bg-red-100 transition-colors font-bold text-xs">
+                    <Eraser size={14} /> {t('reset_data')}
+                  </button>
                 </div>
               </div>
 
-              <div className="pt-8 text-center">
+              <div className="pt-4 pb-2 text-center">
                 <p className="text-[10px] text-slate-600 font-mono">v1.2.0 • Shift Cycle Manager</p>
               </div>
             </div>
+          </div>
           </div>
         </>
       )}
