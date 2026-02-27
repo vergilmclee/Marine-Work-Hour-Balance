@@ -552,17 +552,44 @@ const AppContent: React.FC = () => {
             {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setCycleIndex(cycleIndex - 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronLeft size={20} /></button>
-          <button onClick={handleJumpToToday} className="p-2 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"><CalendarClock size={20} /></button>
-          <button onClick={() => setCycleIndex(cycleIndex + 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronRight size={20} /></button>
-          <button onClick={() => setIsWizardOpen(true)} className="p-2 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"><Wand2 size={20} /></button>
-          <button onClick={() => setShowSettings(true)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><Settings size={20} /></button>
+        <div className="flex gap-1">
+          <button onClick={() => setCycleIndex(cycleIndex - 1)} title={t('jump_to_today')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronLeft size={20} /></button>
+          <button onClick={handleJumpToToday} title={t('jump_to_today')} className="px-2 py-1 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex flex-col items-center gap-0.5"><CalendarClock size={18} /><span className="text-[9px] font-bold leading-none">{t('jump_to_today')}</span></button>
+          <button onClick={() => setCycleIndex(cycleIndex + 1)} title={t('jump_to_today')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronRight size={20} /></button>
+          <button onClick={() => setIsWizardOpen(true)} title={t('situation_wizard')} className="px-2 py-1 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors flex flex-col items-center gap-0.5"><Wand2 size={18} /><span className="text-[9px] font-bold leading-none">{t('situation_wizard')}</span></button>
+          <button onClick={() => setShowSettings(true)} title={t('settings')} className="px-2 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors flex flex-col items-center gap-0.5"><Settings size={18} /><span className="text-[9px] font-bold leading-none">{t('settings')}</span></button>
         </div>
       </div>
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto px-4 pb-48 pt-4 scrollbar-hide">
+        {/* Carried Over Balance Card */}
+        <div className={`flex items-center justify-between px-4 py-2 mb-3 rounded-2xl bg-white shadow-sm border ${previousBalance < 0 ? 'border-red-100' : 'border-slate-200'}`}>
+          <div className="text-[10px] font-bold text-slate-400 uppercase leading-tight whitespace-pre-line">{t('carried_over')}</div>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              step="0.01"
+              value={previousBalance}
+              onChange={(e) => {
+                setPreviousBalance(parseFloat(e.target.value) || 0);
+                setIsLinkedBalance(false);
+              }}
+              className={`text-right w-28 font-black text-2xl bg-transparent border-none outline-none p-0 ${previousBalance < 0 ? 'text-red-500' : 'text-slate-800'}`}
+            />
+            <button
+              onClick={() => {
+                const { balance, isLinked } = getEffectivePreviousBalance(cycleIndex);
+                setPreviousBalance(balance);
+                setIsLinkedBalance(isLinked);
+              }}
+              className={`p-1.5 rounded-full transition-colors ${isLinkedBalance ? 'text-blue-200 hover:text-blue-600' : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'}`}
+              title="Recalculate / Sync Balance"
+            >
+              <RefreshCcw size={14} />
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-7 gap-2 mb-2">
           {WEEKDAYS.map(d => <div key={d} className="text-center text-[10px] uppercase font-bold text-slate-400">{d}</div>)}
         </div>
