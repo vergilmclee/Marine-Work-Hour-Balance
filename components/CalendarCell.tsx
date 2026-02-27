@@ -79,26 +79,25 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
     <button
       onClick={onClick}
       className={`
-        rounded-xl border p-1 relative flex flex-col justify-between items-start transition-all duration-200 active:scale-95 h-full min-h-[56px]
+        rounded-lg border p-1 relative flex flex-col justify-between items-start transition-all duration-200 active:scale-95 h-full min-h-[52px]
         ${getBgColor()}
         ${isUserTeamWorking ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}
       `}
     >
       <div className="flex justify-between w-full items-start">
-        <span className={`text-[10px] font-bold leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-white' : isWeekend ? 'text-red-400' : 'text-slate-700'}`}>
+        <span className={`text-[11px] font-bold leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-white' : isWeekend ? 'text-red-400' : 'text-slate-700'}`}>
           {dayNum}
         </span>
-        <div className="flex gap-0.5 items-center">
+        <div className="flex gap-px items-center">
           {hasNote && (
             <div className={`w-1 h-1 rounded-full ${entry.type === EntryType.REGULAR_SHIFT ? 'bg-amber-400' : 'bg-amber-500'}`} />
           )}
-          {/* Team badges - show which teams are working */}
           {workingTeams.length > 0 && (
-            <div className="flex gap-0.5">
+            <div className="flex gap-px">
               {workingTeams.map(team => (
                 <div
                   key={team}
-                  className={`w-3 h-3 rounded-full ${getTeamColor(team)} text-white text-[6px] font-black flex items-center justify-center border border-white/50`}
+                  className={`w-2.5 h-2.5 rounded-full ${getTeamColor(team)} text-white text-[5px] font-black flex items-center justify-center border border-white/50`}
                   title={`Unit ${team}`}
                 >
                   {team}
