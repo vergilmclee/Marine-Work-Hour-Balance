@@ -750,6 +750,18 @@ const AppContent: React.FC = () => {
                 </div>
               </div>
 
+              {/* Staff Number */}
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">{t('staff_number')}</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 12345"
+                  value={staffNumber}
+                  onChange={(e) => setStaffNumber(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-300"
+                />
+              </div>
+
               {/* Language Selection */}
               <div>
                 <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">{t('language')}</label>
