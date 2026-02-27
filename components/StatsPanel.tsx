@@ -33,8 +33,8 @@ const StatsPanel: React.FC<StatsPanelProps> = ({
   const potentialFullShifts = Math.floor(balance / HOURS_CONFIG.REGULAR_SHIFT_HOURS);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] z-50 rounded-t-[2rem] pt-3 px-4 pb-safe transition-all">
-      <div className="max-w-md mx-auto flex flex-col gap-2 pb-1">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] z-50 rounded-t-2xl pt-2.5 px-3 pb-safe transition-all">
+      <div className="max-w-md mx-auto flex flex-col gap-1.5 pb-0.5">
         
         {/* Top Row: Target & Worked */}
         <div className="flex items-end justify-between">

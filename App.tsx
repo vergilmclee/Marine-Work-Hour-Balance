@@ -542,33 +542,33 @@ const AppContent: React.FC = () => {
   return (
     <div className="h-[100dvh] flex flex-col bg-slate-50 relative overflow-hidden font-sans">
       {/* Top Bar */}
-      <div className="bg-white px-5 pt-12 pb-2 shadow-sm z-10 sticky top-0 border-b border-slate-100">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <Briefcase size={20} className="text-blue-600" />
+      <div className="bg-white px-3 pt-safe pb-1.5 shadow-sm z-10 sticky top-0 border-b border-slate-100">
+        <div className="flex justify-between items-center pt-2">
+          <div className="min-w-0">
+            <h1 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+              <Briefcase size={18} className="text-blue-600 shrink-0" />
               SHIFT CYCLE
             </h1>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
             </p>
           </div>
-          <div className="flex gap-1">
-            <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronLeft size={20} /></button>
-            <button onClick={() => handleCycleChange(cycleIndex + 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronRight size={20} /></button>
+          <div className="flex gap-1 shrink-0">
+            <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors active:scale-95"><ChevronLeft size={20} /></button>
+            <button onClick={() => handleCycleChange(cycleIndex + 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors active:scale-95"><ChevronRight size={20} /></button>
           </div>
         </div>
-        <div className="flex gap-2 mt-2 pb-1">
-          <button onClick={handleJumpToToday} title={t('jump_to_today')} className="flex-1 py-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center justify-center gap-1.5 text-xs font-bold"><CalendarClock size={14} />{t('jump_to_today')}</button>
-          <button onClick={() => setIsWizardOpen(true)} title={t('situation_wizard')} className="flex-1 py-1.5 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors flex items-center justify-center gap-1.5 text-xs font-bold"><Wand2 size={14} />{t('situation_wizard')}</button>
-          <button onClick={() => setShowSettings(true)} title={t('settings')} className="flex-1 py-1.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5 text-xs font-bold"><Settings size={14} />{t('settings')}</button>
+        <div className="flex gap-1.5 mt-1.5 pb-0.5">
+          <button onClick={handleJumpToToday} title={t('jump_to_today')} className="flex-1 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center justify-center gap-1 text-[11px] font-bold active:scale-95"><CalendarClock size={13} />{t('jump_to_today')}</button>
+          <button onClick={() => setIsWizardOpen(true)} title={t('situation_wizard')} className="flex-1 py-2 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors flex items-center justify-center gap-1 text-[11px] font-bold active:scale-95"><Wand2 size={13} />{t('situation_wizard')}</button>
+          <button onClick={() => setShowSettings(true)} title={t('settings')} className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors flex items-center justify-center gap-1 text-[11px] font-bold active:scale-95"><Settings size={13} />{t('settings')}</button>
         </div>
       </div>
 
       {/* Grid */}
-      <div className="flex-1 overflow-y-auto px-4 pb-48 pt-4 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto px-2 pb-44 pt-2 scrollbar-hide">
         {/* Carried Over Balance Card */}
-        <div className={`flex items-center justify-between px-4 py-2 mb-3 rounded-2xl bg-white shadow-sm border ${previousBalance < 0 ? 'border-red-100' : 'border-slate-200'}`}>
+        <div className={`flex items-center justify-between px-3 py-1.5 mb-2 rounded-xl bg-white shadow-sm border ${previousBalance < 0 ? 'border-red-100' : 'border-slate-200'}`}>
           <div className="text-[10px] font-bold text-slate-400 uppercase leading-tight whitespace-pre-line">{t('carried_over')}</div>
           <div className="flex items-center gap-1">
             <input
@@ -594,10 +594,10 @@ const AppContent: React.FC = () => {
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-7 gap-2 mb-2">
+        <div className="grid grid-cols-7 gap-1 mb-1">
           {WEEKDAYS.map(d => <div key={d} className="text-center text-[10px] uppercase font-bold text-slate-400">{d}</div>)}
         </div>
-        <div className="grid grid-cols-7 gap-2 auto-rows-fr">
+        <div className="grid grid-cols-7 gap-1 auto-rows-fr">
           {(() => {
             const firstDate = getDayDate(1);
             const jsDay = firstDate.getDay(); // 0=Sun,1=Mon,...,6=Sat
