@@ -542,22 +542,26 @@ const AppContent: React.FC = () => {
   return (
     <div className="h-[100dvh] flex flex-col bg-slate-50 relative overflow-hidden font-sans">
       {/* Top Bar */}
-      <div className="bg-white px-5 pt-12 pb-4 shadow-sm z-10 sticky top-0 flex justify-between items-center border-b border-slate-100">
-        <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Briefcase size={20} className="text-blue-600" />
-            SHIFT CYCLE
-          </h1>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-          </p>
+      <div className="bg-white px-5 pt-12 pb-2 shadow-sm z-10 sticky top-0 border-b border-slate-100">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <Briefcase size={20} className="text-blue-600" />
+              SHIFT CYCLE
+            </h1>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            </p>
+          </div>
+          <div className="flex gap-1">
+            <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronLeft size={20} /></button>
+            <button onClick={() => handleCycleChange(cycleIndex + 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronRight size={20} /></button>
+          </div>
         </div>
-        <div className="flex gap-1">
-          <button onClick={() => handleCycleChange(cycleIndex - 1)} title={t('jump_to_today')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronLeft size={20} /></button>
-          <button onClick={handleJumpToToday} title={t('jump_to_today')} className="px-2 py-1 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex flex-col items-center gap-0.5"><CalendarClock size={18} /><span className="text-[9px] font-bold leading-none">{t('jump_to_today')}</span></button>
-          <button onClick={() => handleCycleChange(cycleIndex + 1)} title={t('jump_to_today')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"><ChevronRight size={20} /></button>
-          <button onClick={() => setIsWizardOpen(true)} title={t('situation_wizard')} className="px-2 py-1 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors flex flex-col items-center gap-0.5"><Wand2 size={18} /><span className="text-[9px] font-bold leading-none">{t('situation_wizard')}</span></button>
-          <button onClick={() => setShowSettings(true)} title={t('settings')} className="px-2 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors flex flex-col items-center gap-0.5"><Settings size={18} /><span className="text-[9px] font-bold leading-none">{t('settings')}</span></button>
+        <div className="flex gap-2 mt-2 pb-1">
+          <button onClick={handleJumpToToday} title={t('jump_to_today')} className="flex-1 py-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center justify-center gap-1.5 text-xs font-bold"><CalendarClock size={14} />{t('jump_to_today')}</button>
+          <button onClick={() => setIsWizardOpen(true)} title={t('situation_wizard')} className="flex-1 py-1.5 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors flex items-center justify-center gap-1.5 text-xs font-bold"><Wand2 size={14} />{t('situation_wizard')}</button>
+          <button onClick={() => setShowSettings(true)} title={t('settings')} className="flex-1 py-1.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5 text-xs font-bold"><Settings size={14} />{t('settings')}</button>
         </div>
       </div>
 
@@ -616,6 +620,26 @@ const AppContent: React.FC = () => {
         onGenerate={handleGenerateReport}
         isLoading={loading}
       />
+
+      {/* Report Overlay */}
+      {report && (
+        <>
+          <div className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm" onClick={() => setReport(null)} />
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[110] pb-safe animate-in slide-in-from-bottom duration-300 max-h-[85vh] overflow-y-auto">
+            <div className="flex justify-between items-center px-6 pt-6 pb-4 border-b border-slate-100 sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Info size={20} /> {t('report_generated') || 'Generated Report'}</h2>
+              <button onClick={() => setReport(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="px-6 py-4">
+              <div className="prose prose-sm max-w-none">
+                <ReactMarkdown>{report}</ReactMarkdown>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Modals */}
       {selectedDay && (
@@ -710,17 +734,7 @@ const AppContent: React.FC = () => {
                 </p>
               </div>
 
-              {/* Report */}
-              {report && (
-                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
-                    <Info size={12} /> {t('report_generated')}
-                  </h3>
-                  <div className="prose prose-invert prose-sm max-w-none">
-                    <ReactMarkdown>{report}</ReactMarkdown>
-                  </div>
-                </div>
-              )}
+              {/* Report moved to main screen overlay */}
 
               {/* Data Management */}
               <div>
