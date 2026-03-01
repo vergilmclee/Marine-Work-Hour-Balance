@@ -117,18 +117,22 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
             </div>
           )}
           {division === 'SLU' && sluParsed.length > 0 && (
-            <div className="flex gap-px">
-              {sluParsed.map(a => (
-                <div
-                  key={a.unit}
-                  className={`h-2.5 px-0.5 rounded text-[4px] font-black flex items-center justify-center border border-white/50 ${
-                    a.unit === sluUnit && a.parsed?.team === sluTeam ? 'bg-yellow-500 text-white' : 'bg-slate-400 text-white'
-                  }`}
-                  title={`${a.unit}${a.parsed?.team}`}
-                >
-                  {a.parsed?.team}
-                </div>
-              ))}
+            <div className="flex gap-0.5 flex-wrap justify-end">
+              {sluParsed.map(a => {
+                const unitNum = a.unit.replace('C', '');
+                const isUser = a.unit === sluUnit && a.parsed?.team === sluTeam;
+                return (
+                  <div
+                    key={a.unit}
+                    className={`h-3.5 px-1 rounded text-[7px] font-black flex items-center justify-center leading-none ${
+                      isUser ? 'bg-yellow-500 text-white ring-1 ring-yellow-300' : 'bg-slate-500 text-white'
+                    }`}
+                    title={`${a.unit} Team ${a.parsed?.team}`}
+                  >
+                    {unitNum}{a.parsed?.team}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
