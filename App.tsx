@@ -548,7 +548,7 @@ const AppContent: React.FC = () => {
 
   // Main Dashboard
   return (
-    <div className={`h-[100dvh] flex flex-col bg-slate-50 relative overflow-hidden font-sans ${fontSize === 'small' ? 'text-[13px]' : fontSize === 'large' ? 'text-[17px]' : 'text-[15px]'}`}>
+    <div className="h-[100dvh] flex flex-col bg-slate-50 relative overflow-hidden font-sans" style={{ zoom: fontSize === 'small' ? 0.85 : fontSize === 'large' ? 1.15 : 1 }}>
       {/* Top Bar */}
       <div className="bg-white px-3 pt-safe pb-1.5 shadow-sm z-10 sticky top-0 border-b border-slate-100">
         <div className="flex justify-between items-center pt-2">
