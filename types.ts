@@ -129,10 +129,92 @@ export interface ReportRequestData {
 }
 
 export type Language = 'en' | 'zh-HK';
+export type Division = 'MSSU' | 'SLU';
+export type FontSize = 'small' | 'medium' | 'large';
 
 export interface UserPrefs {
   startDate: string;
   staffNumber: string;
   language: Language;
-  userTeam?: number; // User's assigned team (1-4)
+  userTeam?: number; // MSSU: team 1-4
+  division?: Division;
+  fontSize?: FontSize;
+  sluUnit?: string; // SLU: C2/C5/C8/C9
+  sluTeam?: string; // SLU: A/B/C
+}
+
+// ── SLU Roster Logic ──
+
+export const SLU_UNITS = ['C2', 'C5', 'C8', 'C9'] as const;
+export type SluUnit = typeof SLU_UNITS[number];
+export const SLU_TEAMS = ['A', 'B', 'C'] as const;
+
+export const SLU_TIME_SLOTS = [
+  { start: '08:45', end: '09:28' },
+  { start: '09:30', end: '10:13' },
+  { start: '10:15', end: '10:58' },
+  { start: '11:00', end: '11:43' },
+];
+
+export const SLU_DURATION_MIN = 1483; // 24h 43m
+export const SLU_DURATION_HRS = 24.72;
+
+export const SLU_BASE_UNIT_SLOT: Record<string, number> = {
+  C5: 0, C8: 1, C9: 2, C2: 3,
+};
+
+export const SLU_BASE_CYCLE_START = '2026-03-19';
+
+export type SluAssignment = { C5: string; C8: string; C9: string; C2: string };
+
+// 18-day assignment pattern (cell values like "5A", "8C", "" = OFF)
+export const SLU_ASSIGNMENT_PATTERN: SluAssignment[] = [
+  { C5: '5A', C8: '8A', C9: '9A', C2: '2A' },
+  { C5: '5B', C8: '8B', C9: '9B', C2: '2B' },
+  { C5: '',   C8: '8C', C9: '9C', C2: '2C' },
+  { C5: '5A', C8: '',   C9: '9A', C2: '2A' },
+  { C5: '5B', C8: '8B', C9: '',   C2: '2B' },
+  { C5: '5C', C8: '8C', C9: '9C', C2: ''   },
+  { C5: '',   C8: '8A', C9: '9A', C2: '2A' },
+  { C5: '5B', C8: '',   C9: '9B', C2: '2B' },
+  { C5: '5C', C8: '8C', C9: '',   C2: '2C' },
+  { C5: '5A', C8: '8A', C9: '9A', C2: ''   },
+  { C5: '',   C8: '8B', C9: '9B', C2: '2B' },
+  { C5: '5C', C8: '',   C9: '9C', C2: '2C' },
+  { C5: '5A', C8: '8A', C9: '',   C2: '2A' },
+  { C5: '5B', C8: '8B', C9: '9B', C2: ''   },
+  { C5: '',   C8: '8C', C9: '9C', C2: '2C' },
+  { C5: '5A', C8: '',   C9: '9A', C2: '2A' },
+  { C5: '5B', C8: '8B', C9: '',   C2: '2B' },
+  { C5: '5C', C8: '8C', C9: '9C', C2: ''   },
+];
+
+/** Parse a cell like "8C" → { unit: "C8", team: "C" } or null if OFF */
+export function parseSluCell(cell: string): { unit: string; team: string } | null {
+  if (!cell || !cell.trim()) return null;
+  const clean = cell.replace(/\*/g, '');
+  const match = clean.match(/([2589])([ABC])/i);
+  if (!match) return null;
+  return { unit: `C${match[1]}`, team: match[2].toUpperCase() };
+}
+
+/** Get the time slot index for a unit in a given cycle */
+export function getSluSlot(unit: string, cycleIndex: number): number {
+  const base = SLU_BASE_UNIT_SLOT[unit] ?? 0;
+  return ((base + cycleIndex) % 4 + 4) % 4;
+}
+
+/** Get SLU assignments for a specific day in the cycle (0-indexed dayInCycle) */
+export function getSluAssignmentsForDay(dayInCycle: number): SluAssignment {
+  return SLU_ASSIGNMENT_PATTERN[dayInCycle] || { C5: '', C8: '', C9: '', C2: '' };
+}
+
+/** Get cycle index from a date relative to SLU base */
+export function getSluCycleIndex(targetDate: Date): number {
+  const base = new Date(SLU_BASE_CYCLE_START);
+  base.setHours(0, 0, 0, 0);
+  const target = new Date(targetDate);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((target.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.floor(diffDays / 18);
 }
