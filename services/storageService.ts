@@ -1,6 +1,6 @@
 
 
-import { DayEntry, EntryType, UserPrefs, TEAM_ROTATION } from '../types';
+import { DayEntry, EntryType, UserPrefs, TEAM_ROTATION, Division } from '../types';
 
 const STORAGE_KEY = 'shiftcycle_data_v1';
 const PREFS_KEY = 'shiftcycle_prefs_v1';

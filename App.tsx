@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { DayEntry, EntryType, HOURS_CONFIG, Language } from './types';
+import { DayEntry, EntryType, HOURS_CONFIG, Language, Division, FontSize, SLU_UNITS, SLU_TEAMS, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, getSluCycleIndex } from './types';
 import CalendarCell from './components/CalendarCell';
 import DayCard from './components/DayCard';
 import StatsPanel from './components/StatsPanel';
@@ -56,6 +56,10 @@ const AppContent: React.FC = () => {
 
   //Add userTeam state
   const [userTeam, setUserTeam] = useState<number | undefined>();
+  const [division, setDivision] = useState<Division>('MSSU');
+  const [fontSize, setFontSize] = useState<FontSize>('medium');
+  const [sluUnit, setSluUnit] = useState<string | undefined>();
+  const [sluTeam, setSluTeam] = useState<string | undefined>();
 
   // Cycle State
   const [cycleIndex, setCycleIndex] = useState(0); // 0 = Anchor cycle. Positive = future, Negative = past.
@@ -133,6 +137,10 @@ const AppContent: React.FC = () => {
     setStartDate(prefs.startDate);
     setStaffNumber(prefs.staffNumber || '');
     setUserTeam(prefs.userTeam);
+    setDivision(prefs.division || 'MSSU');
+    setFontSize(prefs.fontSize || 'medium');
+    setSluUnit(prefs.sluUnit);
+    setSluTeam(prefs.sluTeam);
     // Language is handled by Context, but we might want to sync if it changed externally? 
     // Usually Context handles initialization.
 
@@ -201,8 +209,8 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (!isInitialized || isResettingRef.current) return;
     // Note: language is saved by setLanguage in context
-    saveUserPrefs({ startDate, staffNumber, language, userTeam });
-  }, [startDate, staffNumber, language, userTeam, isInitialized]);
+    saveUserPrefs({ startDate, staffNumber, language, userTeam, division, fontSize, sluUnit, sluTeam });
+  }, [startDate, staffNumber, language, userTeam, division, fontSize, sluUnit, sluTeam, isInitialized]);
 
   // --- Cycle Navigation Handlers ---
   const handleCycleChange = (newIndex: number) => {
@@ -540,7 +548,7 @@ const AppContent: React.FC = () => {
 
   // Main Dashboard
   return (
-    <div className="h-[100dvh] flex flex-col bg-slate-50 relative overflow-hidden font-sans">
+    <div className={`h-[100dvh] flex flex-col bg-slate-50 relative overflow-hidden font-sans ${fontSize === 'small' ? 'text-[13px]' : fontSize === 'large' ? 'text-[17px]' : 'text-[15px]'}`}>
       {/* Top Bar */}
       <div className="bg-white px-3 pt-safe pb-1.5 shadow-sm z-10 sticky top-0 border-b border-slate-100">
         <div className="flex justify-between items-center pt-2">
@@ -653,6 +661,10 @@ const AppContent: React.FC = () => {
                   date={date}
                   onClick={() => handleDayClick(day)}
                   userTeam={userTeam}
+                  division={division}
+                  sluUnit={sluUnit}
+                  sluTeam={sluTeam}
+                  cycleIndex={cycleIndex}
                 />
               );
             });
@@ -734,21 +746,73 @@ const AppContent: React.FC = () => {
               </div>
 
               <div className="space-y-5 px-5 py-4">
-              {/* User Team */}
+              {/* Division Selection */}
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">{t('my_team')}</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[1, 2, 3, 4].map(team => (
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">Division</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['MSSU', 'SLU'] as Division[]).map(div => (
                     <button
-                      key={team}
-                      onClick={() => setUserTeam(team)}
-                      className={`py-2 rounded-lg text-sm font-bold transition-all ${userTeam === team ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                      key={div}
+                      onClick={() => setDivision(div)}
+                      className={`py-2 rounded-lg text-xs font-bold transition-all ${division === div ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                     >
-                      {team}
+                      {div}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* MSSU: Team Selection */}
+              {division === 'MSSU' && (
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">{t('my_team')}</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[1, 2, 3, 4].map(team => (
+                      <button
+                        key={team}
+                        onClick={() => setUserTeam(team)}
+                        className={`py-2 rounded-lg text-sm font-bold transition-all ${userTeam === team ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                      >
+                        {team}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SLU: Unit & Team Selection */}
+              {division === 'SLU' && (
+                <>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">Unit</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {SLU_UNITS.map(u => (
+                        <button
+                          key={u}
+                          onClick={() => setSluUnit(u)}
+                          className={`py-2 rounded-lg text-xs font-bold transition-all ${sluUnit === u ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">Team</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {SLU_TEAMS.map(tm => (
+                        <button
+                          key={tm}
+                          onClick={() => setSluTeam(tm)}
+                          className={`py-2 rounded-lg text-sm font-bold transition-all ${sluTeam === tm ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                        >
+                          {tm}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Staff Number */}
               <div>
@@ -760,6 +824,22 @@ const AppContent: React.FC = () => {
                   onChange={(e) => setStaffNumber(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-300"
                 />
+              </div>
+
+              {/* Font Size */}
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">{language === 'zh-HK' ? '字體大小' : 'Font Size'}</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([['small', 'S'], ['medium', 'M'], ['large', 'L']] as [FontSize, string][]).map(([sz, label]) => (
+                    <button
+                      key={sz}
+                      onClick={() => setFontSize(sz)}
+                      className={`py-2 rounded-lg font-bold transition-all ${fontSize === sz ? 'bg-slate-700 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'} ${sz === 'small' ? 'text-xs' : sz === 'large' ? 'text-base' : 'text-sm'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Language Selection */}

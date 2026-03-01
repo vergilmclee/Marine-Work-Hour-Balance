@@ -1,5 +1,5 @@
 import React from 'react';
-import { DayEntry, EntryType, getTeamRotationForDate } from '../types';
+import { DayEntry, EntryType, getTeamRotationForDate, Division, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, SLU_UNITS } from '../types';
 import { Briefcase, Sun, Calendar, Clock, GraduationCap, ArrowRightCircle, MinusCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -7,10 +7,14 @@ interface CalendarCellProps {
   entry: DayEntry;
   date: Date;
   onClick: () => void;
-  userTeam?: number; // Highlight if this is user's team
+  userTeam?: number;
+  division?: Division;
+  sluUnit?: string;
+  sluTeam?: string;
+  cycleIndex?: number;
 }
 
-const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userTeam }) => {
+const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userTeam, division = 'MSSU', sluUnit, sluTeam, cycleIndex = 0 }) => {
   const { t } = useLanguage();
 
   const getBgColor = () => {
@@ -44,10 +48,17 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
   const dayNum = date.getDate();
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
-  // Get teams working this day from rotation pattern based on actual date
+  // Get teams/units working this day
   const teamRotation = getTeamRotationForDate(date);
-  const workingTeams = teamRotation[entry.dayId] || [];
-  const isUserTeamWorking = userTeam && workingTeams.includes(userTeam);
+  const workingTeams = division === 'MSSU' ? (teamRotation[entry.dayId] || []) : [];
+  const isUserTeamWorking = division === 'MSSU' && userTeam && workingTeams.includes(userTeam);
+
+  // SLU: get assignments for this day
+  const sluDayAssignments = division === 'SLU' ? getSluAssignmentsForDay(entry.dayId - 1) : null;
+  const sluParsed = sluDayAssignments
+    ? SLU_UNITS.map(u => ({ unit: u, parsed: parseSluCell(sluDayAssignments[u as keyof typeof sluDayAssignments]) })).filter(a => a.parsed)
+    : [];
+  const isUserSluWorking = division === 'SLU' && sluUnit && sluTeam && sluParsed.some(a => a.unit === sluUnit && a.parsed?.team === sluTeam);
 
   // Tiny badge text
   const getBadge = () => {
@@ -81,18 +92,18 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
       className={`
         rounded-lg border p-1 relative flex flex-col justify-between items-start transition-all duration-200 active:scale-95 h-full min-h-[52px]
         ${getBgColor()}
-        ${isUserTeamWorking ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}
+        ${(isUserTeamWorking || isUserSluWorking) ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}
       `}
     >
       <div className="flex justify-between w-full items-start">
         <span className={`text-[11px] font-bold leading-none ${entry.type === EntryType.REGULAR_SHIFT ? 'text-white' : isWeekend ? 'text-red-400' : 'text-slate-700'}`}>
           {dayNum}
         </span>
-        <div className="flex gap-px items-center">
+        <div className="flex gap-px items-center flex-wrap justify-end">
           {hasNote && (
             <div className={`w-1 h-1 rounded-full ${entry.type === EntryType.REGULAR_SHIFT ? 'bg-amber-400' : 'bg-amber-500'}`} />
           )}
-          {workingTeams.length > 0 && (
+          {division === 'MSSU' && workingTeams.length > 0 && (
             <div className="flex gap-px">
               {workingTeams.map(team => (
                 <div
@@ -101,6 +112,21 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
                   title={`Unit ${team}`}
                 >
                   {team}
+                </div>
+              ))}
+            </div>
+          )}
+          {division === 'SLU' && sluParsed.length > 0 && (
+            <div className="flex gap-px">
+              {sluParsed.map(a => (
+                <div
+                  key={a.unit}
+                  className={`h-2.5 px-0.5 rounded text-[4px] font-black flex items-center justify-center border border-white/50 ${
+                    a.unit === sluUnit && a.parsed?.team === sluTeam ? 'bg-yellow-500 text-white' : 'bg-slate-400 text-white'
+                  }`}
+                  title={`${a.unit}${a.parsed?.team}`}
+                >
+                  {a.parsed?.team}
                 </div>
               ))}
             </div>
