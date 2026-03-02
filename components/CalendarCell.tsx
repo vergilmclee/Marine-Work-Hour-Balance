@@ -1,5 +1,5 @@
 import React from 'react';
-import { DayEntry, EntryType, getTeamRotationForDate, Division, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, SLU_UNITS } from '../types';
+import { DayEntry, EntryType, getTeamRotationForDate, Division, getSluAssignmentsForDay, getSluDayInCycle, parseSluCell, SLU_UNITS } from '../types';
 import { Briefcase, Sun, Calendar, Clock, GraduationCap, ArrowRightCircle, MinusCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -54,7 +54,7 @@ const CalendarCell: React.FC<CalendarCellProps> = ({ entry, date, onClick, userT
   const isUserTeamWorking = division === 'MSSU' && userTeam && workingTeams.includes(userTeam);
 
   // SLU: get assignments for this day
-  const sluDayAssignments = division === 'SLU' ? getSluAssignmentsForDay(entry.dayId - 1) : null;
+  const sluDayAssignments = division === 'SLU' ? getSluAssignmentsForDay(getSluDayInCycle(date)) : null;
   const sluParsed = sluDayAssignments
     ? SLU_UNITS.map(u => ({ unit: u, parsed: parseSluCell(sluDayAssignments[u as keyof typeof sluDayAssignments]) })).filter(a => a.parsed)
     : [];

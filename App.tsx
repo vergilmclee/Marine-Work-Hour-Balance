@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { DayEntry, EntryType, HOURS_CONFIG, Language, Division, FontSize, SLU_UNITS, SLU_TEAMS, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, getSluCycleIndex } from './types';
+import { DayEntry, EntryType, HOURS_CONFIG, Language, Division, FontSize, SLU_BASE_CYCLE_START, SLU_UNITS, SLU_TEAMS, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, getSluCycleIndex } from './types';
 import CalendarCell from './components/CalendarCell';
 import DayCard from './components/DayCard';
 import StatsPanel from './components/StatsPanel';
@@ -86,6 +86,30 @@ const AppContent: React.FC = () => {
   const lastLoadedBalanceRef = useRef<number>(0);
   const isResettingRef = useRef(false);
 
+
+  const getCycleAnchorDate = (targetDivision: Division, mssuStartDate: string): string => {
+    return targetDivision === 'SLU' ? SLU_BASE_CYCLE_START : mssuStartDate;
+  };
+
+  const getCycleIndexFromAnchor = (targetDivision: Division, anchorDate: string): number => {
+    if (!anchorDate) return 0;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (targetDivision === 'SLU' && anchorDate === SLU_BASE_CYCLE_START) {
+      return getSluCycleIndex(today);
+    }
+
+    const [y, m, d] = anchorDate.split('-').map(Number);
+    const anchor = new Date(y, m - 1, d);
+    anchor.setHours(0, 0, 0, 0);
+
+    const diffTime = today.getTime() - anchor.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.floor(diffDays / 18);
+  };
+
   // --- Helper: Gap-Aware Previous Balance Calculation ---
   const getEffectivePreviousBalance = (targetIndex: number): { balance: number, isLinked: boolean } => {
     // 1. If we are at the anchor or before, use stored data directly
@@ -146,17 +170,24 @@ const AppContent: React.FC = () => {
 
     let targetIndex = 0;
 
-    // Calculate current cycle based on Today if start date exists
-    if (prefs.startDate) {
-      const [y, m, d] = prefs.startDate.split('-').map(Number);
-      const start = new Date(y, m - 1, d);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    // Calculate current cycle based on Today and division-specific anchor
+    const initialDivision = prefs.division || 'MSSU';
+    const anchorDate = getCycleAnchorDate(initialDivision, prefs.startDate);
+    if (anchorDate) {
+      if (initialDivision === 'SLU') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        targetIndex = getSluCycleIndex(today);
+      } else {
+        const [y, m, d] = anchorDate.split('-').map(Number);
+        const start = new Date(y, m - 1, d);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-      const diffTime = today.getTime() - start.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      // Cycle index is floor(days / 18)
-      targetIndex = Math.floor(diffDays / 18);
+        const diffTime = today.getTime() - start.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        targetIndex = Math.floor(diffDays / 18);
+      }
     }
 
     setCycleIndex(targetIndex);
@@ -251,17 +282,10 @@ const AppContent: React.FC = () => {
   };
 
   const handleJumpToToday = () => {
-    if (!startDate) return;
+    const anchorDate = getCycleAnchorDate(division, startDate);
+    if (!anchorDate) return;
 
-    const [y, m, d] = startDate.split('-').map(Number);
-    const start = new Date(y, m - 1, d);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const diffTime = today.getTime() - start.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    const newCycleIndex = Math.floor(diffDays / 18);
+    const newCycleIndex = getCycleIndexFromAnchor(division, anchorDate);
     if (newCycleIndex !== cycleIndex) {
       handleCycleChange(newCycleIndex);
     }
@@ -388,12 +412,13 @@ const AppContent: React.FC = () => {
   const cycleStats = useMemo(() => calculateCycleStats(days, previousBalance), [days, previousBalance]);
 
   const cycleStartDate = useMemo(() => {
-    if (!startDate) return new Date();
-    const [y, m, d] = startDate.split('-').map(Number);
+    const anchorDate = getCycleAnchorDate(division, startDate);
+    if (!anchorDate) return new Date();
+    const [y, m, d] = anchorDate.split('-').map(Number);
     const start = new Date(y, m - 1, d);
     start.setDate(start.getDate() + (cycleIndex * 18));
     return start;
-  }, [startDate, cycleIndex]);
+  }, [division, startDate, cycleIndex]);
 
   const cycleEndDate = useMemo(() => {
     const end = new Date(cycleStartDate);
@@ -540,10 +565,29 @@ const AppContent: React.FC = () => {
 
   // Helper to calculate date for a specific day in the cycle
   const getDayDate = (dayId: number) => {
-    const d = new Date(startDate);
+    const anchorDate = getCycleAnchorDate(division, startDate);
+    const d = new Date(anchorDate || startDate);
     // Add cycle offset (cycleIndex * 18 days) + day offset (dayId - 1)
     d.setDate(d.getDate() + (cycleIndex * 18) + (dayId - 1));
     return d;
+  };
+
+
+  const handleDivisionChange = (newDivision: Division) => {
+    setDivision(newDivision);
+
+    const anchorDate = getCycleAnchorDate(newDivision, startDate);
+    if (!anchorDate) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const newCycleIndex = newDivision === 'SLU'
+      ? getSluCycleIndex(today)
+      : getCycleIndexFromAnchor(newDivision, anchorDate);
+
+    if (newCycleIndex !== cycleIndex) {
+      handleCycleChange(newCycleIndex);
+    }
   };
 
   // Main Dashboard
@@ -753,7 +797,7 @@ const AppContent: React.FC = () => {
                   {(['MSSU', 'SLU'] as Division[]).map(div => (
                     <button
                       key={div}
-                      onClick={() => setDivision(div)}
+                      onClick={() => handleDivisionChange(div)}
                       className={`py-2 rounded-lg text-xs font-bold transition-all ${division === div ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                     >
                       {div}
