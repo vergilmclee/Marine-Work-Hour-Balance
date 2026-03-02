@@ -212,20 +212,20 @@ export function getSluAssignmentsForDay(dayInCycle: number): SluAssignment {
 
 /** Get cycle index from a date relative to SLU base */
 export function getSluCycleIndex(targetDate: Date): number {
-  const base = new Date(SLU_BASE_CYCLE_START);
-  base.setHours(0, 0, 0, 0);
-  const target = new Date(targetDate);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((target.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
+  const base = new Date(`${SLU_BASE_CYCLE_START}T00:00:00Z`);
+  const diffDays = getUtcCalendarDayDiff(base, targetDate);
   return Math.floor(diffDays / 18);
 }
 
 /** Get 0-based day index within the SLU 18-day cycle for a date */
 export function getSluDayInCycle(targetDate: Date): number {
-  const base = new Date(SLU_BASE_CYCLE_START);
-  base.setHours(0, 0, 0, 0);
-  const target = new Date(targetDate);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((target.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
+  const base = new Date(`${SLU_BASE_CYCLE_START}T00:00:00Z`);
+  const diffDays = getUtcCalendarDayDiff(base, targetDate);
   return ((diffDays % 18) + 18) % 18;
+}
+
+function getUtcCalendarDayDiff(baseDate: Date, targetDate: Date): number {
+  const baseUtc = Date.UTC(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate());
+  const targetUtc = Date.UTC(targetDate.getUTCFullYear(), targetDate.getUTCMonth(), targetDate.getUTCDate());
+  return Math.floor((targetUtc - baseUtc) / (1000 * 60 * 60 * 24));
 }
