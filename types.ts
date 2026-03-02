@@ -163,7 +163,8 @@ export const SLU_BASE_UNIT_SLOT: Record<string, number> = {
   C5: 0, C8: 1, C9: 2, C2: 3,
 };
 
-export const SLU_BASE_CYCLE_START = '2026-03-19';
+// Reference cycle: 2026-03-01 to 2026-03-18
+export const SLU_BASE_CYCLE_START = '2026-03-01';
 
 export type SluAssignment = { C5: string; C8: string; C9: string; C2: string };
 
@@ -217,4 +218,14 @@ export function getSluCycleIndex(targetDate: Date): number {
   target.setHours(0, 0, 0, 0);
   const diffDays = Math.floor((target.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
   return Math.floor(diffDays / 18);
+}
+
+/** Get 0-based day index within the SLU 18-day cycle for a date */
+export function getSluDayInCycle(targetDate: Date): number {
+  const base = new Date(SLU_BASE_CYCLE_START);
+  base.setHours(0, 0, 0, 0);
+  const target = new Date(targetDate);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((target.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
+  return ((diffDays % 18) + 18) % 18;
 }
