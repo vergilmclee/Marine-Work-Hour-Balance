@@ -71,6 +71,9 @@ const PATTERNS = [PATTERN_A, PATTERN_B, PATTERN_C, PATTERN_D];
 // Reference date for pattern calculation (August 8, 2024 = Pattern A, Day 1)
 const PATTERN_REFERENCE_DATE = new Date('2024-08-08');
 
+/** SLU (Ship Leave Unit) fixed anchor day — cycle 0 starts on this date. MSSU uses user-configured startDate. */
+export const SLU_ANCHOR_DATE = '2026-03-01';
+
 /**
  * Get the team rotation pattern for a specific date
  * @param targetDate - The date to get the pattern for
@@ -163,7 +166,8 @@ export const SLU_BASE_UNIT_SLOT: Record<string, number> = {
   C5: 0, C8: 1, C9: 2, C2: 3,
 };
 
-export const SLU_BASE_CYCLE_START = '2026-03-19';
+/** SLU cycle index and date math use this anchor; kept in sync with SLU_ANCHOR_DATE. */
+export const SLU_BASE_CYCLE_START = SLU_ANCHOR_DATE;
 
 export type SluAssignment = { C5: string; C8: string; C9: string; C2: string };
 
@@ -209,7 +213,7 @@ export function getSluAssignmentsForDay(dayInCycle: number): SluAssignment {
   return SLU_ASSIGNMENT_PATTERN[dayInCycle] || { C5: '', C8: '', C9: '', C2: '' };
 }
 
-/** Get cycle index from a date relative to SLU base */
+/** Get cycle index from a date relative to SLU base (anchor 2026-03-01). */
 export function getSluCycleIndex(targetDate: Date): number {
   const base = new Date(SLU_BASE_CYCLE_START);
   base.setHours(0, 0, 0, 0);
@@ -217,4 +221,14 @@ export function getSluCycleIndex(targetDate: Date): number {
   target.setHours(0, 0, 0, 0);
   const diffDays = Math.floor((target.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
   return Math.floor(diffDays / 18);
+}
+
+/** Get cycle start and end dates for an anchor (YYYY-MM-DD) and cycle index. */
+export function getCycleStartEnd(anchorDateStr: string, cycleIndex: number): { start: Date; end: Date } {
+  const [y, m, d] = anchorDateStr.split('-').map(Number);
+  const start = new Date(y, m - 1, d);
+  start.setDate(start.getDate() + cycleIndex * 18);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 17);
+  return { start, end };
 }

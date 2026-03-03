@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { DayEntry, EntryType, HOURS_CONFIG, Language, Division, FontSize, SLU_UNITS, SLU_TEAMS, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, getSluCycleIndex } from './types';
+import { DayEntry, EntryType, HOURS_CONFIG, Language, Division, FontSize, SLU_UNITS, SLU_TEAMS, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, getSluCycleIndex, SLU_ANCHOR_DATE, getCycleStartEnd } from './types';
 import CalendarCell from './components/CalendarCell';
 import DayCard from './components/DayCard';
 import StatsPanel from './components/StatsPanel';
@@ -389,17 +389,15 @@ const AppContent: React.FC = () => {
 
   const cycleStartDate = useMemo(() => {
     if (!startDate) return new Date();
-    const [y, m, d] = startDate.split('-').map(Number);
-    const start = new Date(y, m - 1, d);
-    start.setDate(start.getDate() + (cycleIndex * 18));
-    return start;
+    return getCycleStartEnd(startDate, cycleIndex).start;
   }, [startDate, cycleIndex]);
 
   const cycleEndDate = useMemo(() => {
-    const end = new Date(cycleStartDate);
-    end.setDate(end.getDate() + 17);
-    return end;
-  }, [cycleStartDate]);
+    if (!startDate) return new Date();
+    return getCycleStartEnd(startDate, cycleIndex).end;
+  }, [startDate, cycleIndex]);
+
+  const sluCycleRange = useMemo(() => getCycleStartEnd(SLU_ANCHOR_DATE, cycleIndex), [cycleIndex]);
 
   const handleGenerateReport = async () => {
     setLoading(true);
@@ -557,9 +555,10 @@ const AppContent: React.FC = () => {
               <Briefcase size={18} className="text-blue-600 shrink-0" />
               SHIFT CYCLE
             </h1>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-            </p>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider space-y-0.5">
+              <p><span className="text-slate-500">{t('cycle_mssu')}:</span> {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+              <p><span className="text-slate-500">{t('cycle_slu')}:</span> {sluCycleRange.start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – {sluCycleRange.end.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+            </div>
           </div>
           <div className="flex gap-1 shrink-0">
             <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors active:scale-95"><ChevronLeft size={20} /></button>
