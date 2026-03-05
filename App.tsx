@@ -538,7 +538,9 @@ const AppContent: React.FC = () => {
 
   // Helper to calculate date for a specific day in the cycle
   const getDayDate = (dayId: number) => {
-    const d = new Date(startDate);
+    const anchor = division === 'SLU' ? SLU_ANCHOR_DATE : startDate;
+    const [y, m, dd] = anchor.split('-').map(Number);
+    const d = new Date(y, m - 1, dd);
     // Add cycle offset (cycleIndex * 18 days) + day offset (dayId - 1)
     d.setDate(d.getDate() + (cycleIndex * 18) + (dayId - 1));
     return d;
