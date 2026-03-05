@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { DayEntry, EntryType, HOURS_CONFIG, Language, Division, FontSize, SLU_UNITS, SLU_TEAMS, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, getSluCycleIndex, SLU_ANCHOR_DATE, getCycleStartEnd } from './types';
+import { DayEntry, EntryType, HOURS_CONFIG, Language, Division, FontSize, parseSluCell, getSluCycleIndex, SLU_ANCHOR_DATE, getCycleStartEnd, SLU_UNIT_TEAM_OPTIONS } from './types';
 import CalendarCell from './components/CalendarCell';
 import DayCard from './components/DayCard';
 import StatsPanel from './components/StatsPanel';
@@ -58,8 +58,11 @@ const AppContent: React.FC = () => {
   const [userTeam, setUserTeam] = useState<number | undefined>();
   const [division, setDivision] = useState<Division>('MSSU');
   const [fontSize, setFontSize] = useState<FontSize>('medium');
-  const [sluUnit, setSluUnit] = useState<string | undefined>();
-  const [sluTeam, setSluTeam] = useState<string | undefined>();
+  const [sluSelection, setSluSelection] = useState<string | undefined>();
+  const selectedSlu = useMemo(() => parseSluCell(sluSelection || ''), [sluSelection]);
+  const selectedSluUnit = selectedSlu?.unit;
+  const selectedSluTeam = selectedSlu?.team;
+
 
   // Cycle State
   const [cycleIndex, setCycleIndex] = useState(0); // 0 = Anchor cycle. Positive = future, Negative = past.
@@ -139,8 +142,10 @@ const AppContent: React.FC = () => {
     setUserTeam(prefs.userTeam);
     setDivision(prefs.division || 'MSSU');
     setFontSize(prefs.fontSize || 'medium');
-    setSluUnit(prefs.sluUnit);
-    setSluTeam(prefs.sluTeam);
+    const migratedSluSelection = prefs.sluSelection || (
+      prefs.sluUnit && prefs.sluTeam ? `${prefs.sluUnit.replace(/^C/i, '')}${prefs.sluTeam.toUpperCase()}` : undefined
+    );
+    setSluSelection(migratedSluSelection);
     // Language is handled by Context, but we might want to sync if it changed externally? 
     // Usually Context handles initialization.
 
@@ -209,8 +214,19 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (!isInitialized || isResettingRef.current) return;
     // Note: language is saved by setLanguage in context
-    saveUserPrefs({ startDate, staffNumber, language, userTeam, division, fontSize, sluUnit, sluTeam });
-  }, [startDate, staffNumber, language, userTeam, division, fontSize, sluUnit, sluTeam, isInitialized]);
+    saveUserPrefs({
+      startDate,
+      staffNumber,
+      language,
+      userTeam,
+      division,
+      fontSize,
+      sluSelection,
+      // Keep legacy keys for backwards compatibility.
+      sluUnit: selectedSluUnit,
+      sluTeam: selectedSluTeam
+    });
+  }, [startDate, staffNumber, language, userTeam, division, fontSize, sluSelection, selectedSluUnit, selectedSluTeam, isInitialized]);
 
   // --- Cycle Navigation Handlers ---
   const handleCycleChange = (newIndex: number) => {
@@ -397,7 +413,8 @@ const AppContent: React.FC = () => {
     return getCycleStartEnd(startDate, cycleIndex).end;
   }, [startDate, cycleIndex]);
 
-  const sluCycleRange = useMemo(() => getCycleStartEnd(SLU_ANCHOR_DATE, cycleIndex), [cycleIndex]);
+  const sluCycleIndex = useMemo(() => getSluCycleIndex(cycleStartDate), [cycleStartDate]);
+  const sluCycleRange = useMemo(() => getCycleStartEnd(SLU_ANCHOR_DATE, sluCycleIndex), [sluCycleIndex]);
 
   const handleGenerateReport = async () => {
     setLoading(true);
@@ -661,8 +678,8 @@ const AppContent: React.FC = () => {
                   onClick={() => handleDayClick(day)}
                   userTeam={userTeam}
                   division={division}
-                  sluUnit={sluUnit}
-                  sluTeam={sluTeam}
+                  sluUnit={selectedSluUnit}
+                  sluTeam={selectedSluTeam}
                   cycleIndex={cycleIndex}
                 />
               );
@@ -779,38 +796,22 @@ const AppContent: React.FC = () => {
                 </div>
               )}
 
-              {/* SLU: Unit & Team Selection */}
+              {/* SLU: Combined Unit/Team Selection */}
               {division === 'SLU' && (
-                <>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">Unit</label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {SLU_UNITS.map(u => (
-                        <button
-                          key={u}
-                          onClick={() => setSluUnit(u)}
-                          className={`py-2 rounded-lg text-xs font-bold transition-all ${sluUnit === u ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-                        >
-                          {u}
-                        </button>
-                      ))}
-                    </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">Unit / Team</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {SLU_UNIT_TEAM_OPTIONS.map(option => (
+                      <button
+                        key={option}
+                        onClick={() => setSluSelection(option)}
+                        className={`py-2 rounded-lg text-xs font-bold transition-all ${sluSelection === option ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                      >
+                        {option}
+                      </button>
+                    ))}
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase text-slate-500 mb-2 block tracking-wider">Team</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {SLU_TEAMS.map(tm => (
-                        <button
-                          key={tm}
-                          onClick={() => setSluTeam(tm)}
-                          className={`py-2 rounded-lg text-sm font-bold transition-all ${sluTeam === tm ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-                        >
-                          {tm}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
 
               {/* Staff Number */}
