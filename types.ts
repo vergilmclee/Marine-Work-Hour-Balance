@@ -72,7 +72,7 @@ const PATTERNS = [PATTERN_A, PATTERN_B, PATTERN_C, PATTERN_D];
 const PATTERN_REFERENCE_DATE = new Date('2024-08-08');
 
 /** SLU (Ship Leave Unit) fixed anchor day — cycle 0 starts on this date. MSSU uses user-configured startDate. */
-export const SLU_ANCHOR_DATE = '2026-03-01';
+export const SLU_ANCHOR_DATE = '2026-01-06';
 
 /**
  * Get the team rotation pattern for a specific date
@@ -142,8 +142,9 @@ export interface UserPrefs {
   userTeam?: number; // MSSU: team 1-4
   division?: Division;
   fontSize?: FontSize;
-  sluUnit?: string; // SLU: C2/C5/C8/C9
-  sluTeam?: string; // SLU: A/B/C
+  sluSelection?: string; // SLU combined selection: 2A/5B/...
+  sluUnit?: string; // Legacy compatibility: C2/C5/C8/C9
+  sluTeam?: string; // Legacy compatibility: A/B/C
 }
 
 // ── SLU Roster Logic ──
@@ -151,6 +152,7 @@ export interface UserPrefs {
 export const SLU_UNITS = ['C2', 'C5', 'C8', 'C9'] as const;
 export type SluUnit = typeof SLU_UNITS[number];
 export const SLU_TEAMS = ['A', 'B', 'C'] as const;
+export const SLU_UNIT_TEAM_OPTIONS = ['2A', '2B', '2C', '5A', '5B', '5C', '8A', '8B', '8C', '9A', '9B', '9C'] as const;
 
 export const SLU_TIME_SLOTS = [
   { start: '08:45', end: '09:28' },
@@ -213,7 +215,7 @@ export function getSluAssignmentsForDay(dayInCycle: number): SluAssignment {
   return SLU_ASSIGNMENT_PATTERN[dayInCycle] || { C5: '', C8: '', C9: '', C2: '' };
 }
 
-/** Get cycle index from a date relative to SLU base (anchor 2026-03-01). */
+/** Get cycle index from a date relative to SLU base anchor date. */
 export function getSluCycleIndex(targetDate: Date): number {
   const base = new Date(SLU_BASE_CYCLE_START);
   base.setHours(0, 0, 0, 0);
