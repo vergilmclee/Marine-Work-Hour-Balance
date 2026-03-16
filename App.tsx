@@ -533,6 +533,14 @@ const AppContent: React.FC = () => {
     return d;
   };
 
+  const handleDivisionChange = (newDivision: Division) => {
+    setDivision(newDivision);
+    const anchor = newDivision === 'SLU' ? SLU_ANCHOR_DATE : startDate;
+    if (!anchor) return;
+    const newCycleIndex = getCycleIndexFromAnchor(anchor, new Date());
+    handleCycleChange(newCycleIndex);
+  };
+
   // Main Dashboard
   return (
     <div className="h-[100dvh] flex flex-col bg-slate-50 relative overflow-hidden font-sans" style={{ zoom: fontSize === 'small' ? 0.85 : fontSize === 'large' ? 1.15 : 1 }}>
@@ -544,10 +552,9 @@ const AppContent: React.FC = () => {
               <Briefcase size={18} className="text-blue-600 shrink-0" />
               SHIFT CYCLE
             </h1>
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider space-y-0.5">
-              <p><span className="text-slate-500">{t('cycle_mssu')}:</span> {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
-              <p><span className="text-slate-500">{t('cycle_slu')}:</span> {sluCycleRange.start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – {sluCycleRange.end.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
-            </div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              {cycleStartDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – {cycleEndDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            </p>
           </div>
           <div className="flex gap-1 shrink-0">
             <button onClick={() => handleCycleChange(cycleIndex - 1)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors active:scale-95"><ChevronLeft size={20} /></button>
@@ -741,7 +748,7 @@ const AppContent: React.FC = () => {
                   {(['MSSU', 'SLU'] as Division[]).map(div => (
                     <button
                       key={div}
-                      onClick={() => setDivision(div)}
+                      onClick={() => handleDivisionChange(div)}
                       className={`py-2 rounded-lg text-xs font-bold transition-all ${division === div ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                     >
                       {div}

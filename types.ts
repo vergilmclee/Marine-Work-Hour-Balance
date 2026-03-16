@@ -243,3 +243,9 @@ export function getCycleIndexFromAnchor(anchorIso: string, targetDate: Date): nu
   return Math.floor(diffDays / 18);
 }
 
+/** Get 0-based day index within the SLU 18-day cycle for a calendar date */
+export function getSluDayInCycle(targetDate: Date): number {
+  const diffDays = calendarDayDiff(SLU_BASE_CYCLE_START, targetDate);
+  return ((diffDays % 18) + 18) % 18;
+}
+
