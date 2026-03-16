@@ -213,22 +213,33 @@ export function getSluAssignmentsForDay(dayInCycle: number): SluAssignment {
   return SLU_ASSIGNMENT_PATTERN[dayInCycle] || { C5: '', C8: '', C9: '', C2: '' };
 }
 
-/** Get cycle index from a date relative to SLU base (anchor 2026-03-01). */
+/** Timezone-safe calendar day difference using UTC to avoid DST issues */
+export function calendarDayDiff(anchorIso: string, target: Date): number {
+  const [ay, am, ad] = anchorIso.split('-').map(Number);
+  const anchorUtc = Date.UTC(ay, am - 1, ad);
+  const targetUtc = Date.UTC(target.getFullYear(), target.getMonth(), target.getDate());
+  return Math.floor((targetUtc - anchorUtc) / (1000 * 60 * 60 * 24));
+}
+
+/** Get cycle index from a date relative to SLU base */
 export function getSluCycleIndex(targetDate: Date): number {
-  const base = new Date(SLU_BASE_CYCLE_START);
-  base.setHours(0, 0, 0, 0);
-  const target = new Date(targetDate);
-  target.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((target.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
+  const diffDays = calendarDayDiff(SLU_BASE_CYCLE_START, targetDate);
   return Math.floor(diffDays / 18);
 }
 
-/** Get cycle start and end dates for an anchor (YYYY-MM-DD) and cycle index. */
-export function getCycleStartEnd(anchorDateStr: string, cycleIndex: number): { start: Date; end: Date } {
-  const [y, m, d] = anchorDateStr.split('-').map(Number);
+/** Get the start and end dates of a cycle given an anchor date string and cycle index */
+export function getCycleStartEnd(anchorIso: string, cycleIndex: number): { start: Date; end: Date } {
+  const [y, m, d] = anchorIso.split('-').map(Number);
   const start = new Date(y, m - 1, d);
   start.setDate(start.getDate() + cycleIndex * 18);
   const end = new Date(start);
   end.setDate(end.getDate() + 17);
   return { start, end };
 }
+
+/** Get cycle index for any anchor date string */
+export function getCycleIndexFromAnchor(anchorIso: string, targetDate: Date): number {
+  const diffDays = calendarDayDiff(anchorIso, targetDate);
+  return Math.floor(diffDays / 18);
+}
+
