@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { DayEntry, EntryType, HOURS_CONFIG, Language, Division, FontSize, SLU_UNITS, SLU_TEAMS, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, getSluCycleIndex } from './types';
+import { DayEntry, EntryType, HOURS_CONFIG, Language, Division, FontSize, SLU_UNITS, SLU_TEAMS, SLU_BASE_CYCLE_START, getSluAssignmentsForDay, parseSluCell, getSluSlot, SLU_TIME_SLOTS, getSluCycleIndex, calendarDayDiff, getCycleStartEnd, getCycleIndexFromAnchor } from './types';
 import CalendarCell from './components/CalendarCell';
 import DayCard from './components/DayCard';
 import StatsPanel from './components/StatsPanel';
@@ -86,6 +86,10 @@ const AppContent: React.FC = () => {
   const lastLoadedBalanceRef = useRef<number>(0);
   const isResettingRef = useRef(false);
 
+  const getAnchorDate = (): string => {
+    return division === 'SLU' ? SLU_BASE_CYCLE_START : startDate;
+  };
+
   // --- Helper: Gap-Aware Previous Balance Calculation ---
   const getEffectivePreviousBalance = (targetIndex: number): { balance: number, isLinked: boolean } => {
     // 1. If we are at the anchor or before, use stored data directly
@@ -146,17 +150,10 @@ const AppContent: React.FC = () => {
 
     let targetIndex = 0;
 
-    // Calculate current cycle based on Today if start date exists
-    if (prefs.startDate) {
-      const [y, m, d] = prefs.startDate.split('-').map(Number);
-      const start = new Date(y, m - 1, d);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const diffTime = today.getTime() - start.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      // Cycle index is floor(days / 18)
-      targetIndex = Math.floor(diffDays / 18);
+    const initDivision = prefs.division || 'MSSU';
+    const anchor = initDivision === 'SLU' ? SLU_BASE_CYCLE_START : prefs.startDate;
+    if (anchor) {
+      targetIndex = getCycleIndexFromAnchor(anchor, new Date());
     }
 
     setCycleIndex(targetIndex);
@@ -251,17 +248,10 @@ const AppContent: React.FC = () => {
   };
 
   const handleJumpToToday = () => {
-    if (!startDate) return;
+    const anchor = getAnchorDate();
+    if (!anchor) return;
 
-    const [y, m, d] = startDate.split('-').map(Number);
-    const start = new Date(y, m - 1, d);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const diffTime = today.getTime() - start.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    const newCycleIndex = Math.floor(diffDays / 18);
+    const newCycleIndex = getCycleIndexFromAnchor(anchor, new Date());
     if (newCycleIndex !== cycleIndex) {
       handleCycleChange(newCycleIndex);
     }
@@ -302,9 +292,8 @@ const AppContent: React.FC = () => {
     courseName?: string, courseLocation?: string, customHours?: number,
     startTime?: string, endTime?: string, breakMinutes?: number
   ) => {
-    if (!startDate) return;
-    const [y, m, d] = startDate.split('-').map(Number);
-    const globalStart = new Date(y, m - 1, d);
+    const anchor = getAnchorDate();
+    if (!anchor) return;
 
     const s = new Date(start); s.setHours(0, 0, 0, 0);
     const e = new Date(end); e.setHours(0, 0, 0, 0);
@@ -313,8 +302,7 @@ const AppContent: React.FC = () => {
 
     let current = new Date(s);
     while (current <= e) {
-      const diffTime = current.getTime() - globalStart.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const diffDays = calendarDayDiff(anchor, current);
       const cIndex = Math.floor(diffDays / 18);
       const dayInCycle = ((diffDays % 18) + 18) % 18 + 1;
 
@@ -388,18 +376,16 @@ const AppContent: React.FC = () => {
   const cycleStats = useMemo(() => calculateCycleStats(days, previousBalance), [days, previousBalance]);
 
   const cycleStartDate = useMemo(() => {
-    if (!startDate) return new Date();
-    const [y, m, d] = startDate.split('-').map(Number);
-    const start = new Date(y, m - 1, d);
-    start.setDate(start.getDate() + (cycleIndex * 18));
-    return start;
-  }, [startDate, cycleIndex]);
+    const anchor = division === 'SLU' ? SLU_BASE_CYCLE_START : startDate;
+    if (!anchor) return new Date();
+    return getCycleStartEnd(anchor, cycleIndex).start;
+  }, [division, startDate, cycleIndex]);
 
   const cycleEndDate = useMemo(() => {
-    const end = new Date(cycleStartDate);
-    end.setDate(end.getDate() + 17);
-    return end;
-  }, [cycleStartDate]);
+    const anchor = division === 'SLU' ? SLU_BASE_CYCLE_START : startDate;
+    if (!anchor) return new Date();
+    return getCycleStartEnd(anchor, cycleIndex).end;
+  }, [division, startDate, cycleIndex]);
 
   const handleGenerateReport = async () => {
     setLoading(true);
@@ -538,11 +524,12 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Helper to calculate date for a specific day in the cycle
   const getDayDate = (dayId: number) => {
-    const d = new Date(startDate);
-    // Add cycle offset (cycleIndex * 18 days) + day offset (dayId - 1)
-    d.setDate(d.getDate() + (cycleIndex * 18) + (dayId - 1));
+    const anchor = getAnchorDate();
+    if (!anchor) return new Date();
+    const { start } = getCycleStartEnd(anchor, cycleIndex);
+    const d = new Date(start);
+    d.setDate(d.getDate() + (dayId - 1));
     return d;
   };
 
